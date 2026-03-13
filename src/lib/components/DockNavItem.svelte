@@ -10,7 +10,7 @@
 
 	let { href, label, icon }: Props = $props();
 
-	let active = $derived(page.url.pathname === href);
+	let active = $derived(href === '/' ? page.url.pathname === '/' || page.url.pathname.startsWith('/count') : page.url.pathname.startsWith(href));
 </script>
 
 <a
