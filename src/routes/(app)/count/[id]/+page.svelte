@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { MicrophoneIcon } from 'phosphor-svelte';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
@@ -7,8 +8,8 @@
 
 	const completed = $derived(data.count.completed !== 'in_progress');
 
-	let deleteDialog: HTMLDialogElement;
-	let completeDialog: HTMLDialogElement;
+	let deleteDialog = $state<HTMLDialogElement>();
+	let completeDialog = $state<HTMLDialogElement>();
 </script>
 
 <Breadcrumbs crumbs={[{ label: 'Counts', href: '/' }, { label: data.count.name }]} />
@@ -29,12 +30,12 @@
 	</div>
 
 	{#if !completed}
-		<button class="btn btn-outline btn-sm btn-success" onclick={() => completeDialog.showModal()}>
+		<button class="btn btn-outline btn-sm btn-success" onclick={() => completeDialog?.showModal()}>
 			Mark as Complete
 		</button>
 	{/if}
 
-	<button class="btn text-error btn-outline btn-sm" onclick={() => deleteDialog.showModal()}>
+	<button class="btn text-error btn-outline btn-sm" onclick={() => deleteDialog?.showModal()}>
 		Delete
 	</button>
 
@@ -56,7 +57,7 @@
 
 {#if !completed}
 	<div class="fab bottom-20">
-		<a href="/count/{data.count.id}/record" class="btn btn-circle btn-lg btn-primary">
+		<a href={resolve(`/count/${data.count.id}/record`)} class="btn btn-circle btn-lg btn-primary">
 			<MicrophoneIcon weight="bold" />
 		</a>
 	</div>
@@ -69,8 +70,8 @@
 			This will mark "{data.count.name}" as completed.
 		</p>
 		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => completeDialog.close()}>Cancel</button>
-			<form method="POST" action="?/complete" use:enhance={() => ({ onResult: () => completeDialog.close() })}>
+			<button class="btn btn-ghost" onclick={() => completeDialog?.close()}>Cancel</button>
+			<form method="POST" action="?/complete" use:enhance={() => async ({ update }) => { completeDialog?.close(); await update(); }}>
 				<button type="submit" class="btn btn-success">Complete</button>
 			</form>
 		</div>
@@ -87,7 +88,7 @@
 			This will permanently delete "{data.count.name}" and all its recorded items.
 		</p>
 		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => deleteDialog.close()}>Cancel</button>
+			<button class="btn btn-ghost" onclick={() => deleteDialog?.close()}>Cancel</button>
 			<form method="POST" action="?/delete" use:enhance>
 				<button type="submit" class="btn btn-error">Delete</button>
 			</form>

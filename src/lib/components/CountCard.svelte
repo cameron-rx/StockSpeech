@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+
 	interface Props {
 		name: string;
 		userName: string;
@@ -21,6 +23,6 @@
 		<p>{userName}</p>
 		<p>{date.toLocaleDateString()}</p>
 
-		<a href="/count/{id}" class="btn btn-outline btn-sm">View</a>
+		<a href={resolve(`/count/${id}`)} class="btn btn-outline btn-sm">View</a>
 	</div>
 </div>

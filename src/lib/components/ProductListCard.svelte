@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+
 	interface Props {
 		name: string;
 		userName: string;
@@ -13,6 +15,6 @@
 		<h2 class="card-title">{name}</h2>
 		<p>{userName}</p>
 
-		<a href="/products/{id}" class="btn btn-outline btn-sm">View</a>
+		<a href={resolve(`/products/${id}`)} class="btn btn-outline btn-sm">View</a>
 	</div>
 </div>
