@@ -12,7 +12,7 @@
 	let completeDialog = $state<HTMLDialogElement>();
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Counts', href: '/' }, { label: data.count.name }]} />
+<Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]} />
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<div class="flex items-start justify-between">

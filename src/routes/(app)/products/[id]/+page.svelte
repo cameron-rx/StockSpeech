@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	let { data, form } = $props();
@@ -8,7 +9,7 @@
 	let dialog: HTMLDialogElement;
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Products', href: '/products' }, { label: data.productList.name }]} />
+<Breadcrumbs crumbs={[{ label: 'Products', href: resolve('/products') }, { label: data.productList.name }]} />
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<h1 class="text-2xl font-bold">{data.productList.name}</h1>

@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-
 	interface Crumb {
 		label: string;
 		href?: string;
@@ -18,7 +16,7 @@
 		{#each crumbs as crumb (crumb.label)}
 			<li>
 				{#if crumb.href}
-					<a href={resolve(crumb.href)}>{crumb.label}</a>
+					<a href={crumb.href}>{crumb.label}</a>
 				{:else}
 					{crumb.label}
 				{/if}

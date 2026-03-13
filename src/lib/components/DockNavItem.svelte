@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -15,7 +14,7 @@
 </script>
 
 <a
-	href={resolve(href)}
+	{href}
 	aria-label={label}
 	aria-current={active ? 'page' : undefined}
 	class:dock-active={active}

@@ -3,7 +3,10 @@ import { createServerClient } from '@supabase/ssr'
 import { type Handle, type HandleServerError } from '@sveltejs/kit'
 
 export const handle: Handle = async ({ event, resolve }) => {
-  event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+  const supabaseUrl = event.platform?.env?.PUBLIC_SUPABASE_URL ?? PUBLIC_SUPABASE_URL
+  const supabaseKey = event.platform?.env?.PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+  event.locals.supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
         return event.cookies.getAll()
