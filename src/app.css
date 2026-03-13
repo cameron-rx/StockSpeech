@@ -5,3 +5,8 @@
 html {
     height: 100%;
 }
+
+/* Override daisyUI fixed positioning so dock sits in normal flex flow */
+.dock {
+    position: static;
+}

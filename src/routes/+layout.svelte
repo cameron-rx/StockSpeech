@@ -10,7 +10,7 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex h-dvh flex-col overflow-hidden">
-	<main class="flex-1 overflow-y-auto overscroll-y-contain">
+	<main class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
 		{@render children()}
 	</main>
 

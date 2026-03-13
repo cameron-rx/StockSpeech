@@ -1,0 +1,18 @@
+<script lang="ts">
+	interface Props {
+		name: string;
+		userName: string;
+		id: string;
+	}
+
+	let { name, userName, id }: Props = $props();
+</script>
+
+<div class="card w-full bg-base-100 p-2 shadow-sm card-xs">
+	<div class="card-body">
+		<h2 class="card-title">{name}</h2>
+		<p>{userName}</p>
+
+		<a href="/products/{id}" class="btn btn-outline btn-sm">View</a>
+	</div>
+</div>
