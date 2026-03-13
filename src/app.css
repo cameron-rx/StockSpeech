@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin 'daisyui';
+
+html {
+    height: 100%;
+}
