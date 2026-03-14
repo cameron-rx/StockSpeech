@@ -9,4 +9,9 @@ html {
 /* Override daisyUI fixed positioning so dock sits in normal flex flow */
 .dock {
     position: static;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-layout {
+    padding-top: env(safe-area-inset-top);
 }

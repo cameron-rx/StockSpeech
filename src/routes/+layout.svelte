@@ -23,7 +23,7 @@
 	{@html webManifestLink}
 </svelte:head>
 
-<div class="flex h-dvh flex-col overflow-hidden">
+<div class="safe-layout flex h-dvh flex-col overflow-hidden">
 	<main class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
 		{@render children()}
 	</main>
