@@ -13,3 +13,26 @@ html {
 .main-content {
     padding-bottom: calc(4rem + env(safe-area-inset-bottom));
 }
+
+.dock {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.fab {
+    bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+```
+
+**2. In your layout Svelte file, find and change one class:**
+```
+h-dvh  →  h-screen
+```
+
+**3. In the same layout file, add `pb-24` to the main element:**
+```
+class="main-content relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-24"
+```
+
+**4. Change the FAB class:**
+```
+bottom-20  →  bottom-24

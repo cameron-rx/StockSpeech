@@ -17,7 +17,7 @@
 	{/each}
 </div>
 
-<div class="fab bottom-20">
+<div class="fab bottom-24">
 	<button class="btn btn-circle btn-lg btn-primary" onclick={() => dialog.showModal()}>
 		<PlusIcon weight="bold" />
 	</button>
@@ -46,7 +46,7 @@
 			</label>
 
 			{#if form?.error}
-				<p class="text-error mb-4 text-sm">{form.error}</p>
+				<p class="mb-4 text-sm text-error">{form.error}</p>
 			{/if}
 
 			<div class="modal-action">
