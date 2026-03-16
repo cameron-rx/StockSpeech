@@ -4,11 +4,19 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: count } = await locals.supabase
 		.from('stock_counts')
-		.select('id, name, completed')
+		.select('id, name, completed, product_list:product_lists!product_list_id(id, name, products(name))')
 		.eq('id', params.id)
 		.single();
 
 	if (!count || count.completed !== 'in_progress') redirect(303, `/count/${params.id}`);
 
-	return { count };
+	const pl = Array.isArray(count.product_list) ? count.product_list[0] : count.product_list;
+	const productListName = pl?.name ?? null;
+	const keywords = (pl?.products ?? []).map((p: { name: string }) => p.name);
+
+	return {
+		count: { id: count.id, name: count.name, completed: count.completed },
+		productListName,
+		keywords
+	};
 };

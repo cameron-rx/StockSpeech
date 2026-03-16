@@ -6,7 +6,7 @@
 	let transcription = $state('Start recording to log items...');
 	let isRecording = $state(false);
 
-	let transcriptionService = new DeepgramService();
+	let transcriptionService = new DeepgramService(data.keywords);
 
 	const parseItem = (transcript: string) => {
 		console.log(transcript);
@@ -16,6 +16,7 @@
 		isRecording = true;
 		await transcriptionService.start((transcript, isFinal) => {
 			if (isFinal && transcript !== '') {
+				transcription = transcript;
 				parseItem(transcription);
 			} else if (transcript !== '') {
 				transcription = transcript;
@@ -32,6 +33,9 @@
 
 <div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
 	<h1 class="text-2xl font-bold">{data.count.name}</h1>
+	{#if data.productListName}
+		<div class="badge badge-soft badge-primary">{data.productListName}</div>
+	{/if}
 	<div class="card w-full rounded-2xl card-border">
 		<div class="card-body items-center text-center text-base-content">
 			<p>{transcription}</p>

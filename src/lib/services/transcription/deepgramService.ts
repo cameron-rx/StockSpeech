@@ -6,11 +6,16 @@ export class DeepgramService implements TranscriptionService {
 	private mic = new MicrophoneService();
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private connection: any = null;
+	private keywords: string[];
+
+	constructor(keywords: string[] = []) {
+		this.keywords = keywords;
+	}
 
 	async start(onTranscript: (text: string, isFinal: boolean) => void): Promise<void> {
 		// 1. Fetch Deepgram access token from edge function
 		const res = await fetch('/api/deepgram-token', { method: 'POST' });
-		const { access_token } = await res.json() as { access_token: string };
+		const { access_token } = (await res.json()) as { access_token: string };
 
 		// 2. Create client + connection
 		const client = new DeepgramClient({ accessToken: access_token });
@@ -21,6 +26,7 @@ export class DeepgramService implements TranscriptionService {
 			channels: 1,
 			interim_results: 'true',
 			punctuate: 'true',
+			keyterm: this.keywords,
 			Authorization: `Bearer ${access_token}`
 		});
 		this.connection = connection;
