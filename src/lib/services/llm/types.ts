@@ -1,4 +1,5 @@
 export interface StockItem {
+	id: string;
 	itemName: string;
 	count: number;
 	confidence: number; // 0-1

@@ -31,13 +31,14 @@
 					);
 					if (product) {
 						savedItems = [
-							...savedItems,
 							{
+								id: product.id,
 								itemName: product.name,
 								count: payload.new.quantity,
 								confidence: 1,
 								rawTranscript: ''
-							}
+							},
+							...savedItems
 						];
 					}
 				}
@@ -69,6 +70,7 @@
 				transcription = transcript;
 			}
 		});
+		transcription = 'Listening for items...';
 	};
 
 	const stopRecording = () => {
@@ -90,8 +92,10 @@
 	</div>
 
 	<div class="flex w-full grow flex-col gap-2 overflow-y-auto">
-		{#each savedItems as item}
-			<div class="flex items-center justify-between rounded-xl border border-base-content/10 px-4 py-3">
+		{#each savedItems as item (item.id)}
+			<div
+				class="flex items-center justify-between rounded-xl border border-base-content/10 px-4 py-3"
+			>
 				<span class="font-medium">{item.itemName}</span>
 				<span class="badge badge-neutral">{item.count}</span>
 			</div>
