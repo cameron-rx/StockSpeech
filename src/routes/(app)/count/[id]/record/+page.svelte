@@ -15,48 +15,82 @@
 	let transcriptionService = new DeepgramService(data.keywords);
 
 	onMount(() => {
-		const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange((_event, session) => {
+		let channel: ReturnType<typeof supabase.channel> | null = null;
+
+		// Helper to (re)subscribe, always called after we have a token
+		const subscribe = () => {
+			if (channel) supabase.removeChannel(channel);
+
+			channel = supabase
+				.channel(`count_items_${data.count.id}`)
+				.on(
+					'postgres_changes',
+					{
+						event: 'INSERT',
+						schema: 'public',
+						table: 'count_items',
+						filter: `stock_count_id=eq.${data.count.id}`
+					},
+					(payload) => {
+						const product = data.products.find(
+							(p: { id: string; name: string }) => p.id === payload.new.product_id
+						);
+						if (product) {
+							savedItems = [
+								{
+									id: payload.new.id,
+									itemName: product.name,
+									count: payload.new.quantity,
+									confidence: 1,
+									rawTranscript: ''
+								},
+								...savedItems
+							];
+						}
+					}
+				)
+				.subscribe((status, err) => {
+					// Helpful for debugging — remove in production
+					console.log('Realtime status:', status, err);
+				});
+		};
+
+		// FIX 1: Get the session FIRST, set auth, then subscribe
+		supabase.auth.getSession().then(({ data: { session } }) => {
+			if (session?.access_token) {
+				supabase.realtime.setAuth(session.access_token);
+			}
+			subscribe();
+		});
+
+		// Keep token fresh on changes (token refresh, sign in, etc.)
+		const {
+			data: { subscription: authListener }
+		} = supabase.auth.onAuthStateChange((_event, session) => {
 			if (session?.access_token) {
 				supabase.realtime.setAuth(session.access_token);
 			}
 		});
 
-		const channel = supabase
-			.channel(`count_items_${data.count.id}`)
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'count_items',
-					filter: `stock_count_id=eq.${data.count.id}`
-				},
-				(payload) => {
-					const product = data.products.find(
-						(p: { id: string; name: string }) => p.id === payload.new.product_id
-					);
-					if (product) {
-						savedItems = [
-							{
-								id: payload.new.id,
-								itemName: product.name,
-								count: payload.new.quantity,
-								confidence: 1,
-								rawTranscript: ''
-							},
-							...savedItems
-						];
+		// FIX 2: Re-subscribe when iOS Safari brings the page back to foreground
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				supabase.auth.getSession().then(({ data: { session } }) => {
+					if (session?.access_token) {
+						supabase.realtime.setAuth(session.access_token);
 					}
-				}
-			)
-			.subscribe();
+					subscribe(); // tear down stale channel, create fresh one
+				});
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
 			authListener.unsubscribe();
-			supabase.removeChannel(channel);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			if (channel) supabase.removeChannel(channel);
 		};
 	});
-
 	const parseItem = async (transcript: string) => {
 		await fetch('/api/open-ai-parse', {
 			method: 'POST',
