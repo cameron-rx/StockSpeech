@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
 	import { DeepgramService } from '$lib/services/transcription/deepgramService';
 	import type { StockItem } from '$lib/services/llm/types';
@@ -12,107 +13,42 @@
 
 	let transcriptionService = new DeepgramService(data.keywords);
 
-	$effect(() => {
-		const supabase = data.supabase!;
-		// Track data.session.access_token as a reactive dependency so this effect
-		// re-runs if the layout refreshes the session (common on iOS Safari).
-		const _sessionToken = data.session?.access_token;
-		let channel: ReturnType<typeof supabase.channel> | null = null;
-
-		const subscribe = async (accessToken: string) => {
-			if (channel) {
-				supabase.removeChannel(channel);
-				channel = null;
-			}
-
-			await supabase.realtime.setAuth(accessToken);
-
-			channel = supabase
-				.channel(`count_items_${data.count.id}`)
-				.on(
-					'postgres_changes',
-					{
-						event: 'INSERT',
-						schema: 'public',
-						table: 'count_items',
-						filter: `stock_count_id=eq.${data.count.id}`
-					},
-					(payload) => {
-						const product = data.products.find(
-							(p: { id: string; name: string }) => p.id === payload.new.product_id
-						);
-						if (product) {
-							savedItems = [
-								{
-									id: payload.new.id,
-									itemName: product.name,
-									count: payload.new.quantity,
-									confidence: 1,
-									rawTranscript: ''
-								},
-								...savedItems
-							];
-						}
+	onMount(() => {
+		const channel = data.supabase
+			.channel(`count_items_${data.count.id}`)
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'count_items',
+					filter: `stock_count_id=eq.${data.count.id}`
+				},
+				(payload) => {
+					const product = data.products.find(
+						(p: { id: string; name: string }) => p.id === payload.new.product_id
+					);
+					if (product) {
+						savedItems = [
+							{
+								id: payload.new.id,
+								itemName: product.name,
+								count: payload.new.quantity,
+								confidence: 1,
+								rawTranscript: ''
+							},
+							...savedItems
+						];
 					}
-				)
-				.subscribe((status, err) => {
-					if (err) console.error('Realtime error:', err);
-					console.log('Realtime status:', status);
-					debugString = `${status} : ${err}`;
-
-					// Retry on connection failure (covers iOS WebSocket drops)
-					if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-						setTimeout(() => {
-							if (data.session?.access_token) subscribe(data.session.access_token);
-						}, 2000);
-					}
-				});
-		};
-
-		if (_sessionToken) {
-			void subscribe(_sessionToken);
-		}
-
-		// Keep token fresh on refresh events
-		const {
-			data: { subscription: authListener }
-		} = supabase.auth.onAuthStateChange((event, session) => {
-			if (session?.access_token) {
-				subscribe(session.access_token);
-			} else if (event === 'SIGNED_OUT') {
-				if (channel) {
-					supabase.removeChannel(channel);
-					channel = null;
 				}
-			}
-		});
-
-		// Re-subscribe when iOS returns from background
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible') {
-				supabase.auth.getSession().then(({ data: { session } }) => {
-					if (session?.access_token) {
-						subscribe(session.access_token);
-					}
-				});
-			}
-		};
-
-		// Re-subscribe on iOS back-forward cache restoration
-		const handlePageShow = (e: PageTransitionEvent) => {
-			if (e.persisted && data.session?.access_token) {
-				subscribe(data.session.access_token);
-			}
-		};
-
-		document.addEventListener('visibilitychange', handleVisibilityChange);
-		window.addEventListener('pageshow', handlePageShow);
+			)
+			.subscribe((status, err) => {
+				console.log('Realtime status:', status, err);
+				debugString = `${status} : ${err}`;
+			});
 
 		return () => {
-			authListener.unsubscribe();
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
-			window.removeEventListener('pageshow', handlePageShow);
-			if (channel) supabase.removeChannel(channel);
+			data.supabase.removeChannel(channel);
 		};
 	});
 
