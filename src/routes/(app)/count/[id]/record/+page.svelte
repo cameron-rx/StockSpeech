@@ -9,6 +9,8 @@
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
 
+	let debugString = $state('Debug string');
+
 	let transcriptionService = new DeepgramService(data.keywords);
 
 	onMount(() => {
@@ -54,6 +56,8 @@
 				.subscribe((status, err) => {
 					if (err) console.error('Realtime error:', err);
 					console.log('Realtime status:', status);
+
+					debugString = `${status} : ${err}`;
 				});
 		};
 
@@ -63,18 +67,18 @@
 		}
 
 		// Keep token fresh on refresh events
-		const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
-			(event, session) => {
-				if (session?.access_token) {
-					subscribe(session.access_token);
-				} else if (event === 'SIGNED_OUT') {
-					if (channel) {
-						supabase.removeChannel(channel);
-						channel = null;
-					}
+		const {
+			data: { subscription: authListener }
+		} = supabase.auth.onAuthStateChange((event, session) => {
+			if (session?.access_token) {
+				subscribe(session.access_token);
+			} else if (event === 'SIGNED_OUT') {
+				if (channel) {
+					supabase.removeChannel(channel);
+					channel = null;
 				}
 			}
-		);
+		});
 
 		// Re-subscribe when iOS returns from background
 		const handleVisibilityChange = () => {
@@ -132,6 +136,7 @@
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
 	{/if}
+	<p>{debugString}</p>
 	<div class="card w-full rounded-2xl card-border">
 		<div class="card-body items-center text-center text-base-content">
 			<p>{transcription}</p>
