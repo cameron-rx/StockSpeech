@@ -19,13 +19,13 @@
 		const _sessionToken = data.session?.access_token;
 		let channel: ReturnType<typeof supabase.channel> | null = null;
 
-		const subscribe = (accessToken: string) => {
+		const subscribe = async (accessToken: string) => {
 			if (channel) {
 				supabase.removeChannel(channel);
 				channel = null;
 			}
 
-			supabase.realtime.setAuth(accessToken);
+			await supabase.realtime.setAuth(accessToken);
 
 			channel = supabase
 				.channel(`count_items_${data.count.id}`)
@@ -70,7 +70,7 @@
 		};
 
 		if (_sessionToken) {
-			subscribe(_sessionToken);
+			await subscribe(_sessionToken);
 		}
 
 		// Keep token fresh on refresh events
