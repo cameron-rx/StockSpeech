@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
 	import { DeepgramService } from '$lib/services/transcription/deepgramService';
 	import type { StockItem } from '$lib/services/llm/types';
@@ -13,8 +12,11 @@
 
 	let transcriptionService = new DeepgramService(data.keywords);
 
-	onMount(() => {
+	$effect(() => {
 		const supabase = data.supabase!;
+		// Track data.session.access_token as a reactive dependency so this effect
+		// re-runs if the layout refreshes the session (common on iOS Safari).
+		const _sessionToken = data.session?.access_token;
 		let channel: ReturnType<typeof supabase.channel> | null = null;
 
 		const subscribe = (accessToken: string) => {
@@ -56,14 +58,19 @@
 				.subscribe((status, err) => {
 					if (err) console.error('Realtime error:', err);
 					console.log('Realtime status:', status);
-
 					debugString = `${status} : ${err}`;
+
+					// Retry on connection failure (covers iOS WebSocket drops)
+					if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+						setTimeout(() => {
+							if (data.session?.access_token) subscribe(data.session.access_token);
+						}, 2000);
+					}
 				});
 		};
 
-		// Session is already resolved by layout load — subscribe immediately
-		if (data.session?.access_token) {
-			subscribe(data.session.access_token);
+		if (_sessionToken) {
+			subscribe(_sessionToken);
 		}
 
 		// Keep token fresh on refresh events
@@ -90,11 +97,21 @@
 				});
 			}
 		};
+
+		// Re-subscribe on iOS back-forward cache restoration
+		const handlePageShow = (e: PageTransitionEvent) => {
+			if (e.persisted && data.session?.access_token) {
+				subscribe(data.session.access_token);
+			}
+		};
+
 		document.addEventListener('visibilitychange', handleVisibilityChange);
+		window.addEventListener('pageshow', handlePageShow);
 
 		return () => {
 			authListener.unsubscribe();
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			window.removeEventListener('pageshow', handlePageShow);
 			if (channel) supabase.removeChannel(channel);
 		};
 	});
