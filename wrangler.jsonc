@@ -12,7 +12,7 @@
 	"preview_urls": true,
 	"vars": {
 		"PUBLIC_SUPABASE_URL": "https://aurjroznmxrvgbefefyq.supabase.co",
-		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Y7XH6bdBk4gGbar5F4G0vw_BGkHVnjr"
+		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1cmpyb3pubXhydmdiZWZlZnlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMzA4NTIsImV4cCI6MjA4ODkwNjg1Mn0.7S0aGqhvY1_xwtRm8i3v_XfTf41rq-pk9zLRAPWmNQM"
 	},
 	"observability": {
 		"enabled": false,
