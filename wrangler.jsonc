@@ -13,5 +13,20 @@
 	"vars": {
 		"PUBLIC_SUPABASE_URL": "https://aurjroznmxrvgbefefyq.supabase.co",
 		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Y7XH6bdBk4gGbar5F4G0vw_BGkHVnjr"
+	},
+	"observability": {
+		"enabled": false,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": false,
+			"persist": true,
+			"head_sampling_rate": 1
+		}
 	}
 }

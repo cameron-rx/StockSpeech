@@ -70,7 +70,7 @@
 		};
 
 		if (_sessionToken) {
-			await subscribe(_sessionToken);
+			void subscribe(_sessionToken);
 		}
 
 		// Keep token fresh on refresh events
