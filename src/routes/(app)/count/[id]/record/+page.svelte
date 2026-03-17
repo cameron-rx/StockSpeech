@@ -10,6 +10,7 @@
 	let transcription = $state('Start recording to log items...');
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
+	let debugString = $state('');
 
 	const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	let transcriptionService = new DeepgramService(data.keywords);
@@ -51,7 +52,7 @@
 				)
 				.subscribe((status, err) => {
 					// Helpful for debugging — remove in production
-					console.log('Realtime status:', status, err);
+					debugString = `${status}: ${err}`;
 				});
 		};
 
@@ -128,6 +129,7 @@
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
 	{/if}
+	<p>{debugString}</p>
 	<div class="card w-full rounded-2xl card-border">
 		<div class="card-body items-center text-center text-base-content">
 			<p>{transcription}</p>
