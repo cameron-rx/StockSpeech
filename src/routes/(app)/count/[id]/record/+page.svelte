@@ -2,20 +2,17 @@
 	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
 	import { DeepgramService } from '$lib/services/transcription/deepgramService';
-	import { createBrowserClient } from '@supabase/ssr';
-	import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
-	let debugString = $state('');
 
 	let transcriptionService = new DeepgramService(data.keywords);
 
 	onMount(() => {
-		const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+		const supabase = data.supabase!;
 		let channel: ReturnType<typeof supabase.channel> | null = null;
 
 		const subscribe = (accessToken: string) => {
@@ -57,23 +54,29 @@
 				.subscribe((status, err) => {
 					if (err) console.error('Realtime error:', err);
 					console.log('Realtime status:', status);
-					debugString = `${status}: ${err}`;
 				});
 		};
 
-		const {
-			data: { subscription: authListener }
-		} = supabase.auth.onAuthStateChange((event, session) => {
-			if (session?.access_token) {
-				subscribe(session.access_token);
-			} else if (event === 'SIGNED_OUT') {
-				if (channel) {
-					supabase.removeChannel(channel);
-					channel = null;
+		// Session is already resolved by layout load — subscribe immediately
+		if (data.session?.access_token) {
+			subscribe(data.session.access_token);
+		}
+
+		// Keep token fresh on refresh events
+		const { data: { subscription: authListener } } = supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (session?.access_token) {
+					subscribe(session.access_token);
+				} else if (event === 'SIGNED_OUT') {
+					if (channel) {
+						supabase.removeChannel(channel);
+						channel = null;
+					}
 				}
 			}
-		});
+		);
 
+		// Re-subscribe when iOS returns from background
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
 				supabase.auth.getSession().then(({ data: { session } }) => {
@@ -129,7 +132,6 @@
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
 	{/if}
-	<p>{debugString}</p>
 	<div class="card w-full rounded-2xl card-border">
 		<div class="card-body items-center text-center text-base-content">
 			<p>{transcription}</p>

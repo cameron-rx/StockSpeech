@@ -53,7 +53,10 @@ Only include items that match the product list. Return JSON: { "items": [{ "item
 
 	const stockItems: StockItem[] = llmItems
 		.filter(item => products.some(p => p.name.toLowerCase() === item.itemName.toLowerCase()))
-		.map(item => ({ ...item, rawTranscript: transcript }));
+		.map(item => {
+			const product = products.find(p => p.name.toLowerCase() === item.itemName.toLowerCase())!;
+			return { ...item, id: product.id, rawTranscript: transcript };
+		});
 
 	return json(stockItems);
 };

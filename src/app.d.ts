@@ -2,7 +2,7 @@
 /// <reference types="vite-plugin-pwa/info" />
 /// <reference types="vite-plugin-pwa/client" />
 
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
 // for information about these interfaces
 declare global {
@@ -19,7 +19,10 @@ declare global {
 			supabase: SupabaseClient;
 			safeGetSession(): Promise<{ user: User | null }>;
 		}
-		// interface PageData {}
+		interface PageData {
+			supabase?: SupabaseClient;
+			session?: Session | null;
+		}
 		// interface PageState {}
 	}
 }

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/state';
+	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import favicon from '$lib/assets/favicon.svg';
 	import DockNav from '$lib/components/DockNav.svelte';
 
-	let { children } = $props();
+	let { data, children } = $props();
 
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
@@ -15,6 +16,18 @@
 			const { registerSW } = await import('virtual:pwa-register');
 			registerSW({ immediate: true });
 		}
+	});
+
+	onMount(() => {
+		const { data: { subscription } } = data.supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (session?.expires_at !== data.session?.expires_at) {
+					invalidate('supabase:auth');
+				}
+			}
+		);
+
+		return () => subscription.unsubscribe();
 	});
 </script>
 

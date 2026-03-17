@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "stockspeech-sveletkit-mvp",
+	"name": "stockspeech-sveltekit-mvp",
 	"compatibility_date": "2026-03-12",
 	"compatibility_flags": ["nodejs_als"],
 	"main": ".svelte-kit/cloudflare/_worker.js",
