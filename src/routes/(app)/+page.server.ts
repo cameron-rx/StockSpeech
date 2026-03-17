@@ -5,7 +5,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const [{ data: countRows }, { data: productLists }] = await Promise.all([
 		locals.supabase
 			.from('stock_counts')
-			.select('id, name, completed, started_at, user:profiles!user_id(full_name)')
+			.select('id, name, completed, started_at, user:profiles!user_id(full_name), product_list:product_lists!product_list_id(name)')
 			.order('started_at', { ascending: false }),
 		locals.supabase.from('product_lists').select('id, name')
 	]);
@@ -16,7 +16,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name: row.name,
 			completed: row.completed !== 'in_progress',
 			date: new Date(row.started_at),
-			userName: (Array.isArray(row.user) ? row.user[0] : row.user)?.full_name ?? 'Unknown'
+			userName: (Array.isArray(row.user) ? row.user[0] : row.user)?.full_name ?? 'Unknown',
+			productListName: (Array.isArray(row.product_list) ? row.product_list[0] : row.product_list)?.name ?? null
 		})) ?? [];
 
 	return { counts, productLists: productLists ?? [] };

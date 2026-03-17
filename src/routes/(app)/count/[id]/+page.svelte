@@ -18,11 +18,12 @@
 	<div class="flex items-start justify-between">
 		<div>
 			<h1 class="text-2xl font-bold">{data.count.name}</h1>
-			{#if data.count.productListName}
-				<p class="text-sm text-base-content/60">{data.count.productListName}</p>
-			{/if}
 		</div>
-		<div class="flex items-center gap-2">
+
+		<div class="flex flex-row justify-evenly gap-4">
+			{#if data.count.productListName}
+				<div class="badge badge-soft badge-primary">{data.count.productListName}</div>
+			{/if}
 			<div class="badge {completed ? 'badge-success' : 'badge-warning'}">
 				{completed ? 'Completed' : 'In Progress'}
 			</div>
@@ -71,7 +72,15 @@
 		</p>
 		<div class="modal-action">
 			<button class="btn btn-ghost" onclick={() => completeDialog?.close()}>Cancel</button>
-			<form method="POST" action="?/complete" use:enhance={() => async ({ update }) => { completeDialog?.close(); await update(); }}>
+			<form
+				method="POST"
+				action="?/complete"
+				use:enhance={() =>
+					async ({ update }) => {
+						completeDialog?.close();
+						await update();
+					}}
+			>
 				<button type="submit" class="btn btn-success">Complete</button>
 			</form>
 		</div>

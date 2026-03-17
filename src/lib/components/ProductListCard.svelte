@@ -10,11 +10,9 @@
 	let { name, userName, id }: Props = $props();
 </script>
 
-<div class="card w-full bg-base-100 p-2 shadow-sm card-xs">
+<a href={resolve(`/products/${id}`)} class="card w-full bg-base-100 p-2 shadow-sm card-xs">
 	<div class="card-body">
 		<h2 class="card-title">{name}</h2>
 		<p>{userName}</p>
-
-		<a href={resolve(`/products/${id}`)} class="btn btn-outline btn-sm">View</a>
 	</div>
-</div>
+</a>

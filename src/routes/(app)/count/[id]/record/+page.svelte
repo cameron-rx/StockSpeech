@@ -103,7 +103,6 @@
 	</div>
 
 	<div class="flex w-full flex-row items-center justify-center gap-8">
-		<button class="btn btn-circle bg-blue-100" aria-label="Toggle Recording"> </button>
 		{#if !isRecording}
 			<button
 				onclick={() => startRecording()}
@@ -121,7 +120,5 @@
 				<StopIcon color="white" weight="bold" />
 			</button>
 		{/if}
-
-		<button class="btn btn-circle bg-blue-100" aria-label="Toggle Recording"> </button>
 	</div>
 </div>
