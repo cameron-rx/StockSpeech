@@ -12,15 +12,19 @@
 	let savedItems = $state<StockItem[]>([]);
 	let debugString = $state('');
 
-	const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 	let transcriptionService = new DeepgramService(data.keywords);
 
 	onMount(() => {
+		const supabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 		let channel: ReturnType<typeof supabase.channel> | null = null;
 
-		// Helper to (re)subscribe, always called after we have a token
-		const subscribe = () => {
-			if (channel) supabase.removeChannel(channel);
+		const subscribe = (accessToken: string) => {
+			if (channel) {
+				supabase.removeChannel(channel);
+				channel = null;
+			}
+
+			supabase.realtime.setAuth(accessToken);
 
 			channel = supabase
 				.channel(`count_items_${data.count.id}`)
@@ -51,36 +55,31 @@
 					}
 				)
 				.subscribe((status, err) => {
-					// Helpful for debugging — remove in production
+					if (err) console.error('Realtime error:', err);
+					console.log('Realtime status:', status);
 					debugString = `${status}: ${err}`;
 				});
 		};
 
-		// FIX 1: Get the session FIRST, set auth, then subscribe
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			if (session?.access_token) {
-				supabase.realtime.setAuth(session.access_token);
-			}
-			subscribe();
-		});
-
-		// Keep token fresh on changes (token refresh, sign in, etc.)
 		const {
 			data: { subscription: authListener }
-		} = supabase.auth.onAuthStateChange((_event, session) => {
+		} = supabase.auth.onAuthStateChange((event, session) => {
 			if (session?.access_token) {
-				supabase.realtime.setAuth(session.access_token);
+				subscribe(session.access_token);
+			} else if (event === 'SIGNED_OUT') {
+				if (channel) {
+					supabase.removeChannel(channel);
+					channel = null;
+				}
 			}
 		});
 
-		// FIX 2: Re-subscribe when iOS Safari brings the page back to foreground
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
 				supabase.auth.getSession().then(({ data: { session } }) => {
 					if (session?.access_token) {
-						supabase.realtime.setAuth(session.access_token);
+						subscribe(session.access_token);
 					}
-					subscribe(); // tear down stale channel, create fresh one
 				});
 			}
 		};
@@ -92,6 +91,7 @@
 			if (channel) supabase.removeChannel(channel);
 		};
 	});
+
 	const parseItem = async (transcript: string) => {
 		await fetch('/api/open-ai-parse', {
 			method: 'POST',
