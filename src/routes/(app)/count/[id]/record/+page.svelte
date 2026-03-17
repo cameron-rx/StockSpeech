@@ -2,19 +2,22 @@
 	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
 	import { DeepgramService } from '$lib/services/transcription/deepgramService';
+	import { createBrowserClient } from '@supabase/ssr';
+	import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
+	const browserSupabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 	let debugString = $state('Debug string');
 
 	let transcriptionService = new DeepgramService(data.keywords);
 
 	onMount(() => {
-		const channel = data.supabase
+		const channel = browserSupabase
 			.channel(`count_items_${data.count.id}`)
 			.on(
 				'postgres_changes',
