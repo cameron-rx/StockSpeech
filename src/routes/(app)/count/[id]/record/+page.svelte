@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
-	import { DeepgramService } from '$lib/services/transcription/deepgramService';
 	import { createBrowserClient } from '@supabase/ssr';
 	import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
+	import { AssemblyAIService } from '$lib/services/transcription/assemblyaiService.js';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
@@ -14,7 +14,7 @@
 
 	let debugString = $state('Debug string');
 
-	let transcriptionService = new DeepgramService(data.keywords);
+	let transcriptionService = new AssemblyAIService(data.keywords);
 
 	onMount(() => {
 		const channel = browserSupabase
@@ -72,7 +72,7 @@
 		isRecording = true;
 		await transcriptionService.start((transcript, isFinal) => {
 			if (isFinal && transcript !== '') {
-				transcription = 'Final';
+				transcription = transcript;
 				parseItem(transcript);
 			} else if (transcript !== '') {
 				transcription = transcript;

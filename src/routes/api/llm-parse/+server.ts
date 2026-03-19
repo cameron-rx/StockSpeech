@@ -1,8 +1,8 @@
-import { OPEN_AI_API_KEY } from '$env/static/private';
+import { GROQ_API_KEY } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { StockItem } from '$lib/services/llm/types';
-import { createOpenAIParser, type ParseTranscriptFn } from '$lib/services/llm/openaiProvider';
+import { createGroqParser, type ParseTranscriptFn } from '$lib/services/llm/groqProvider';
 
 type Product = { id: string; name: string };
 
@@ -14,8 +14,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	};
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const apiKey = (platform?.env as any)?.OPEN_AI_API_KEY ?? OPEN_AI_API_KEY;
-	const parseTranscript: ParseTranscriptFn = createOpenAIParser(apiKey);
+	const apiKey = (platform?.env as any)?.GROQ_API_KEY ?? GROQ_API_KEY;
+	const parseTranscript: ParseTranscriptFn = createGroqParser(apiKey, 'llama-3.3-70b-versatile');
 
 	const llmItems = await parseTranscript(
 		transcript,
