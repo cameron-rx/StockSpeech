@@ -27,6 +27,13 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
 
+  if (event.url.pathname.startsWith('/api/')) {
+    const { user } = await event.locals.safeGetSession()
+    if (!user) {
+      return new Response('Unauthorized', { status: 401 })
+    }
+  }
+
   return resolve(event, {
     filterSerializedResponseHeaders(name) {
       return name === 'content-range' || name === 'x-supabase-api-version'
