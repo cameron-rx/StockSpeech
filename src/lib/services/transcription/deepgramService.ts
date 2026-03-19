@@ -27,6 +27,7 @@ export class DeepgramService implements TranscriptionService {
 			interim_results: 'true',
 			punctuate: 'true',
 			numerals: 'true',
+			endpointing: 500,
 			keyterm: this.keywords,
 			Authorization: `Bearer ${access_token}`
 		});

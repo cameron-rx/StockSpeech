@@ -56,13 +56,14 @@
 	});
 
 	const parseItem = async (transcript: string) => {
-		await fetch('/api/open-ai-parse', {
+		await fetch('/api/llm-parse', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				transcript,
 				stockCountId: data.count.id,
-				products: data.products
+				products: data.products,
+				provider: 'openai'
 			})
 		});
 	};
@@ -71,8 +72,8 @@
 		isRecording = true;
 		await transcriptionService.start((transcript, isFinal) => {
 			if (isFinal && transcript !== '') {
-				transcription = transcript;
-				parseItem(transcription);
+				transcription = 'Final';
+				parseItem(transcript);
 			} else if (transcript !== '') {
 				transcription = transcript;
 			}
