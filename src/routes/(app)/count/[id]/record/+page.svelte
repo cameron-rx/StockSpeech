@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { MicrophoneIcon, StopIcon } from 'phosphor-svelte';
+	import { MicrophoneIcon, StopIcon, XIcon } from 'phosphor-svelte';
+	import { resolve } from '$app/paths';
 	import { createBrowserClient } from '@supabase/ssr';
 	import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
@@ -88,7 +89,14 @@
 	};
 </script>
 
-<div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
+<div class="relative flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
+	<a
+		href={resolve(`/count/${data.count.id}`)}
+		class="btn btn-ghost btn-sm btn-square absolute top-4 right-4"
+		aria-label="Close"
+	>
+		<XIcon weight="bold" size={20} />
+	</a>
 	<h1 class="text-2xl font-bold">{data.count.name}</h1>
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
