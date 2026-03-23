@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { PlusIcon, DotsThreeVerticalIcon } from 'phosphor-svelte';
+	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import { venueState } from '$lib/state/venue.svelte';
+	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
+	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import FAB from '$lib/components/FAB.svelte';
 
 	let { data, form } = $props();
 
@@ -35,34 +38,23 @@
 					<p>{productList.userName}</p>
 				</a>
 				<div class="flex items-start pt-3 pr-3">
-					<div class="dropdown dropdown-end">
-						<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
-							<DotsThreeVerticalIcon weight="bold" size={20} />
-						</button>
-						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-						<ul
-							tabindex="0"
-							class="dropdown-content menu bg-base-100 rounded-box z-10 w-28 p-1 shadow"
-						>
-							<li>
-								<button onclick={() => openEditList(productList)}>Edit</button>
-							</li>
+					<ActionDropdown>
+						{#snippet items()}
+							<li><button onclick={() => openEditList(productList)}>Edit</button></li>
 							<li>
 								<button class="text-error" onclick={() => openDeleteList(productList)}>Delete</button>
 							</li>
-						</ul>
-					</div>
+						{/snippet}
+					</ActionDropdown>
 				</div>
 			</div>
 		</div>
 	{/each}
 </div>
 
-<div class="fab bottom-20">
-	<button class="btn btn-circle btn-lg btn-primary" onclick={() => createDialog?.showModal()}>
-		<PlusIcon weight="bold" />
-	</button>
-</div>
+<FAB onclick={() => createDialog?.showModal()}>
+	{#snippet children()}<PlusIcon weight="bold" />{/snippet}
+</FAB>
 
 <dialog bind:this={createDialog} class="modal">
 	<div class="modal-box">
@@ -99,32 +91,16 @@
 	</form>
 </dialog>
 
-<dialog bind:this={deleteListDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Delete product list?</h3>
-		<p class="py-4 text-sm text-base-content/60">
-			This will permanently delete "{selectedList?.name ?? 'this list'}" and all its products.
-		</p>
-		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => deleteListDialog?.close()}>Cancel</button>
-			<form
-				method="POST"
-				action="?/deleteList"
-				use:enhance={() =>
-					async ({ update }) => {
-						deleteListDialog?.close();
-						await update();
-					}}
-			>
-				<input type="hidden" name="listId" value={selectedList?.id} />
-				<button type="submit" class="btn btn-error">Delete</button>
-			</form>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<ConfirmDeleteModal
+	bind:dialog={deleteListDialog}
+	title="Delete product list?"
+	message={`This will permanently delete "${selectedList?.name ?? 'this list'}" and all its products.`}
+	action="?/deleteList"
+>
+	{#snippet hiddenInputs()}
+		<input type="hidden" name="listId" value={selectedList?.id} />
+	{/snippet}
+</ConfirmDeleteModal>
 
 <dialog bind:this={editListDialog} class="modal">
 	<div class="modal-box">

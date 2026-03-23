@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { MicrophoneIcon, DotsThreeVerticalIcon } from 'phosphor-svelte';
+	import { MicrophoneIcon } from 'phosphor-svelte';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
+	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import FAB from '$lib/components/FAB.svelte';
 
 	let { data } = $props();
 
 	const completed = $derived(data.count.completed !== 'in_progress');
 
-	let deleteDialog = $state<HTMLDialogElement>();
 	let completeDialog = $state<HTMLDialogElement>();
+	let deleteDialog = $state<HTMLDialogElement>();
 	let editCountDialog = $state<HTMLDialogElement>();
 	let deleteItemDialog = $state<HTMLDialogElement>();
 	let editItemDialog = $state<HTMLDialogElement>();
@@ -54,15 +57,8 @@
 			<div class="badge {completed ? 'badge-success' : 'badge-warning'}">
 				{completed ? 'Completed' : 'In Progress'}
 			</div>
-			<div class="dropdown dropdown-end">
-				<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
-					<DotsThreeVerticalIcon weight="bold" size={20} />
-				</button>
-				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-				<ul
-					tabindex="0"
-					class="dropdown-content menu bg-base-100 rounded-box z-10 w-36 p-1 shadow"
-				>
+			<ActionDropdown width="w-36">
+				{#snippet items()}
 					<li>
 						<button onclick={() => { editCountName = data.count.name; editCountDialog?.showModal(); }}>
 							Edit
@@ -76,8 +72,8 @@
 					<li>
 						<button class="text-error" onclick={() => deleteDialog?.showModal()}>Delete</button>
 					</li>
-				</ul>
-			</div>
+				{/snippet}
+			</ActionDropdown>
 		</div>
 	</div>
 
@@ -92,23 +88,14 @@
 			</div>
 			<div class="flex items-center gap-2">
 				<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
-				<div class="dropdown dropdown-end">
-					<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
-						<DotsThreeVerticalIcon weight="bold" size={20} />
-					</button>
-					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-					<ul
-						tabindex="0"
-						class="dropdown-content menu bg-base-100 rounded-box z-10 w-28 p-1 shadow"
-					>
-						<li>
-							<button onclick={() => openEditItem(item)}>Edit</button>
-						</li>
+				<ActionDropdown>
+					{#snippet items()}
+						<li><button onclick={() => openEditItem(item)}>Edit</button></li>
 						<li>
 							<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
 						</li>
-					</ul>
-				</div>
+					{/snippet}
+				</ActionDropdown>
 			</div>
 		</div>
 	{:else}
@@ -117,11 +104,9 @@
 </div>
 
 {#if !completed}
-	<div class="fab bottom-20">
-		<a href={resolve(`/count/${data.count.id}/record`)} class="btn btn-circle btn-lg btn-primary">
-			<MicrophoneIcon weight="bold" />
-		</a>
-	</div>
+	<FAB href={resolve(`/count/${data.count.id}/record`)}>
+		{#snippet children()}<MicrophoneIcon weight="bold" />{/snippet}
+	</FAB>
 {/if}
 
 <dialog bind:this={editCountDialog} class="modal">
@@ -187,50 +172,23 @@
 	</form>
 </dialog>
 
-<dialog bind:this={deleteDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Delete count?</h3>
-		<p class="py-4 text-sm text-base-content/60">
-			This will permanently delete "{data.count.name}" and all its recorded items.
-		</p>
-		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => deleteDialog?.close()}>Cancel</button>
-			<form method="POST" action="?/delete" use:enhance>
-				<button type="submit" class="btn btn-error">Delete</button>
-			</form>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<ConfirmDeleteModal
+	bind:dialog={deleteDialog}
+	title="Delete count?"
+	message={`This will permanently delete "${data.count.name}" and all its recorded items.`}
+	action="?/delete"
+/>
 
-<dialog bind:this={deleteItemDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Delete item?</h3>
-		<p class="py-4 text-sm text-base-content/60">
-			This will permanently delete "{selectedItem ? (getProduct(selectedItem)?.name ?? 'this item') : 'this item'}" from the count.
-		</p>
-		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => deleteItemDialog?.close()}>Cancel</button>
-			<form
-				method="POST"
-				action="?/deleteItem"
-				use:enhance={() =>
-					async ({ update }) => {
-						deleteItemDialog?.close();
-						await update();
-					}}
-			>
-				<input type="hidden" name="itemId" value={selectedItem?.id} />
-				<button type="submit" class="btn btn-error">Delete</button>
-			</form>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<ConfirmDeleteModal
+	bind:dialog={deleteItemDialog}
+	title="Delete item?"
+	message={`This will permanently delete "${selectedItem ? (getProduct(selectedItem)?.name ?? 'this item') : 'this item'}" from the count.`}
+	action="?/deleteItem"
+>
+	{#snippet hiddenInputs()}
+		<input type="hidden" name="itemId" value={selectedItem?.id} />
+	{/snippet}
+</ConfirmDeleteModal>
 
 <dialog bind:this={editItemDialog} class="modal">
 	<div class="modal-box">

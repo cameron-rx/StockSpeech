@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { PlusIcon, DotsThreeVerticalIcon } from 'phosphor-svelte';
+	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
+	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import FAB from '$lib/components/FAB.svelte';
 
 	let { data, form } = $props();
 
@@ -41,34 +44,23 @@
 					<span class="badge badge-ghost">{product.unit}</span>
 				{/if}
 			</div>
-			<div class="dropdown dropdown-end">
-				<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
-					<DotsThreeVerticalIcon weight="bold" size={20} />
-				</button>
-				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-				<ul
-					tabindex="0"
-					class="dropdown-content menu bg-base-100 rounded-box z-10 w-28 p-1 shadow"
-				>
-					<li>
-						<button onclick={() => openEditProduct(product)}>Edit</button>
-					</li>
+			<ActionDropdown>
+				{#snippet items()}
+					<li><button onclick={() => openEditProduct(product)}>Edit</button></li>
 					<li>
 						<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
 					</li>
-				</ul>
-			</div>
+				{/snippet}
+			</ActionDropdown>
 		</div>
 	{:else}
 		<p class="text-base-content/60 text-sm">No products yet. Add one with the + button.</p>
 	{/each}
 </div>
 
-<div class="fab bottom-20">
-	<button class="btn btn-circle btn-lg btn-primary" onclick={() => addDialog?.showModal()}>
-		<PlusIcon weight="bold" />
-	</button>
-</div>
+<FAB onclick={() => addDialog?.showModal()}>
+	{#snippet children()}<PlusIcon weight="bold" />{/snippet}
+</FAB>
 
 <dialog bind:this={addDialog} class="modal">
 	<div class="modal-box">
@@ -100,32 +92,16 @@
 	</form>
 </dialog>
 
-<dialog bind:this={deleteProductDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Delete product?</h3>
-		<p class="py-4 text-sm text-base-content/60">
-			This will permanently delete "{selectedProduct?.name ?? 'this product'}".
-		</p>
-		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={() => deleteProductDialog?.close()}>Cancel</button>
-			<form
-				method="POST"
-				action="?/deleteProduct"
-				use:enhance={() =>
-					async ({ update }) => {
-						deleteProductDialog?.close();
-						await update();
-					}}
-			>
-				<input type="hidden" name="productId" value={selectedProduct?.id} />
-				<button type="submit" class="btn btn-error">Delete</button>
-			</form>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<ConfirmDeleteModal
+	bind:dialog={deleteProductDialog}
+	title="Delete product?"
+	message={`This will permanently delete "${selectedProduct?.name ?? 'this product'}".`}
+	action="?/deleteProduct"
+>
+	{#snippet hiddenInputs()}
+		<input type="hidden" name="productId" value={selectedProduct?.id} />
+	{/snippet}
+</ConfirmDeleteModal>
 
 <dialog bind:this={editProductDialog} class="modal">
 	<div class="modal-box">
