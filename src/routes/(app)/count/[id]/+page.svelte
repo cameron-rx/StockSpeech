@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { MicrophoneIcon } from 'phosphor-svelte';
+	import { MicrophoneIcon, DotsThreeVerticalIcon } from 'phosphor-svelte';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	let { data } = $props();
@@ -10,6 +10,33 @@
 
 	let deleteDialog = $state<HTMLDialogElement>();
 	let completeDialog = $state<HTMLDialogElement>();
+	let editCountDialog = $state<HTMLDialogElement>();
+	let deleteItemDialog = $state<HTMLDialogElement>();
+	let editItemDialog = $state<HTMLDialogElement>();
+
+	let editCountName = $state('');
+
+	type Item = (typeof data.items)[0];
+	let selectedItem = $state<Item | null>(null);
+	let editProductId = $state('');
+	let editQuantity = $state<number | null>(null);
+
+	function getProduct(item: Item) {
+		return Array.isArray(item.product) ? item.product[0] : item.product;
+	}
+
+	function openDeleteItem(item: Item) {
+		selectedItem = item;
+		deleteItemDialog?.showModal();
+	}
+
+	function openEditItem(item: Item) {
+		selectedItem = item;
+		const p = getProduct(item);
+		editProductId = (p as { id?: string } | null)?.id ?? '';
+		editQuantity = item.quantity ?? null;
+		editItemDialog?.showModal();
+	}
 </script>
 
 <Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]} />
@@ -20,28 +47,42 @@
 			<h1 class="text-2xl font-bold">{data.count.name}</h1>
 		</div>
 
-		<div class="flex flex-row justify-evenly gap-4">
+		<div class="flex flex-row items-center gap-2">
 			{#if data.count.productListName}
 				<div class="badge badge-soft badge-primary">{data.count.productListName}</div>
 			{/if}
 			<div class="badge {completed ? 'badge-success' : 'badge-warning'}">
 				{completed ? 'Completed' : 'In Progress'}
 			</div>
+			<div class="dropdown dropdown-end">
+				<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
+					<DotsThreeVerticalIcon weight="bold" size={20} />
+				</button>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+				<ul
+					tabindex="0"
+					class="dropdown-content menu bg-base-100 rounded-box z-10 w-36 p-1 shadow"
+				>
+					<li>
+						<button onclick={() => { editCountName = data.count.name; editCountDialog?.showModal(); }}>
+							Edit
+						</button>
+					</li>
+					{#if !completed}
+						<li>
+							<button onclick={() => completeDialog?.showModal()}>Mark Complete</button>
+						</li>
+					{/if}
+					<li>
+						<button class="text-error" onclick={() => deleteDialog?.showModal()}>Delete</button>
+					</li>
+				</ul>
+			</div>
 		</div>
 	</div>
 
-	{#if !completed}
-		<button class="btn btn-outline btn-sm btn-success" onclick={() => completeDialog?.showModal()}>
-			Mark as Complete
-		</button>
-	{/if}
-
-	<button class="btn text-error btn-outline btn-sm" onclick={() => deleteDialog?.showModal()}>
-		Delete
-	</button>
-
 	{#each data.items as item (item.id)}
-		{@const product = Array.isArray(item.product) ? item.product[0] : item.product}
+		{@const product = getProduct(item)}
 		<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
 			<div>
 				<span class="font-medium">{product?.name ?? 'Unknown'}</span>
@@ -49,7 +90,26 @@
 					<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
 				{/if}
 			</div>
-			<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
+			<div class="flex items-center gap-2">
+				<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
+				<div class="dropdown dropdown-end">
+					<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
+						<DotsThreeVerticalIcon weight="bold" size={20} />
+					</button>
+					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+					<ul
+						tabindex="0"
+						class="dropdown-content menu bg-base-100 rounded-box z-10 w-28 p-1 shadow"
+					>
+						<li>
+							<button onclick={() => openEditItem(item)}>Edit</button>
+						</li>
+						<li>
+							<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
 	{:else}
 		<p class="text-base-content/60 text-sm">No items recorded yet.</p>
@@ -63,6 +123,43 @@
 		</a>
 	</div>
 {/if}
+
+<dialog bind:this={editCountDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="mb-4 text-lg font-bold">Edit Count</h3>
+		<form
+			method="POST"
+			action="?/editCount"
+			use:enhance={() =>
+				async ({ update }) => {
+					editCountDialog?.close();
+					await update();
+				}}
+			class="flex flex-col gap-4"
+		>
+			<label class="floating-label">
+				<input
+					class="input w-full"
+					type="text"
+					name="name"
+					placeholder="Count name"
+					bind:value={editCountName}
+					required
+				/>
+				<span>Name</span>
+			</label>
+			<div class="modal-action mt-0">
+				<button type="button" class="btn btn-ghost" onclick={() => editCountDialog?.close()}>
+					Cancel
+				</button>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div>
+		</form>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
 
 <dialog bind:this={completeDialog} class="modal">
 	<div class="modal-box">
@@ -102,6 +199,79 @@
 				<button type="submit" class="btn btn-error">Delete</button>
 			</form>
 		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
+
+<dialog bind:this={deleteItemDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Delete item?</h3>
+		<p class="py-4 text-sm text-base-content/60">
+			This will permanently delete "{selectedItem ? (getProduct(selectedItem)?.name ?? 'this item') : 'this item'}" from the count.
+		</p>
+		<div class="modal-action">
+			<button class="btn btn-ghost" onclick={() => deleteItemDialog?.close()}>Cancel</button>
+			<form
+				method="POST"
+				action="?/deleteItem"
+				use:enhance={() =>
+					async ({ update }) => {
+						deleteItemDialog?.close();
+						await update();
+					}}
+			>
+				<input type="hidden" name="itemId" value={selectedItem?.id} />
+				<button type="submit" class="btn btn-error">Delete</button>
+			</form>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
+
+<dialog bind:this={editItemDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Edit item</h3>
+		<form
+			method="POST"
+			action="?/editItem"
+			use:enhance={() =>
+				async ({ update }) => {
+					editItemDialog?.close();
+					await update();
+				}}
+			class="flex flex-col gap-4 pt-4"
+		>
+			<input type="hidden" name="itemId" value={selectedItem?.id} />
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Product</span>
+				<select name="productId" class="select select-bordered w-full" bind:value={editProductId}>
+					{#each data.products as p (p.id)}
+						<option value={p.id}>{p.name}{p.unit ? ` (${p.unit})` : ''}</option>
+					{/each}
+				</select>
+			</label>
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Quantity</span>
+				<input
+					type="number"
+					name="quantity"
+					class="input input-bordered w-full"
+					bind:value={editQuantity}
+					min="0"
+					step="any"
+				/>
+			</label>
+			<div class="modal-action mt-0">
+				<button type="button" class="btn btn-ghost" onclick={() => editItemDialog?.close()}>
+					Cancel
+				</button>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div>
+		</form>
 	</div>
 	<form method="dialog" class="modal-backdrop">
 		<button>close</button>

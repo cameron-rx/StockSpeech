@@ -37,5 +37,29 @@ export const actions: Actions = {
 		if (error) return fail(500, { error: error.message });
 
 		redirect(303, `/products/${data.id}`);
+	},
+
+	deleteList: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const listId = formData.get('listId') as string;
+
+		const { error } = await locals.supabase.from('product_lists').delete().eq('id', listId);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	editList: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const listId = formData.get('listId') as string;
+		const name = formData.get('name') as string;
+
+		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+
+		const { error } = await locals.supabase
+			.from('product_lists')
+			.update({ name: name.trim() })
+			.eq('id', listId);
+
+		if (error) return fail(500, { error: error.message });
 	}
 };

@@ -32,5 +32,30 @@ export const actions: Actions = {
 			.insert({ name: name.trim(), unit, product_list_id: params.id });
 
 		if (error) return fail(500, { error: error.message });
+	},
+
+	deleteProduct: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const productId = formData.get('productId') as string;
+
+		const { error } = await locals.supabase.from('products').delete().eq('id', productId);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	editProduct: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const productId = formData.get('productId') as string;
+		const name = formData.get('name') as string;
+		const unit = (formData.get('unit') as string) || null;
+
+		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+
+		const { error } = await locals.supabase
+			.from('products')
+			.update({ name: name.trim(), unit })
+			.eq('id', productId);
+
+		if (error) return fail(500, { error: error.message });
 	}
 };

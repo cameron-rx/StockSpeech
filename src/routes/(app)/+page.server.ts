@@ -50,5 +50,29 @@ export const actions: Actions = {
 		if (error) return fail(500, { error: error.message });
 
 		redirect(303, `/count/${data.id}`);
+	},
+
+	deleteCount: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const countId = formData.get('countId') as string;
+
+		const { error } = await locals.supabase.from('stock_counts').delete().eq('id', countId);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	editCount: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const countId = formData.get('countId') as string;
+		const name = formData.get('name') as string;
+
+		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+
+		const { error } = await locals.supabase
+			.from('stock_counts')
+			.update({ name: name.trim() })
+			.eq('id', countId);
+
+		if (error) return fail(500, { error: error.message });
 	}
 };
