@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { MicrophoneIcon, StopIcon, XIcon, ArrowCounterClockwiseIcon, PlusIcon } from 'phosphor-svelte';
+	import {
+		MicrophoneIcon,
+		StopIcon,
+		XIcon,
+		ArrowCounterClockwiseIcon,
+		PlusIcon
+	} from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { createBrowserClient } from '@supabase/ssr';
@@ -14,8 +20,6 @@
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
 	const browserSupabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-
-	let debugString = $state('Debug string');
 
 	let deleteItemDialog = $state<HTMLDialogElement>();
 	let editItemDialog = $state<HTMLDialogElement>();
@@ -116,7 +120,7 @@
 <div class="relative flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
 	<a
 		href={resolve(`/count/${data.count.id}`)}
-		class="btn btn-ghost btn-sm btn-square absolute top-4 right-4"
+		class="btn absolute top-4 right-4 btn-square btn-ghost btn-sm"
 		aria-label="Close"
 	>
 		<XIcon weight="bold" size={20} />
@@ -125,7 +129,6 @@
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
 	{/if}
-	<p>{debugString}</p>
 	<div class="card w-full rounded-2xl card-border">
 		<div class="card-body items-center text-center text-base-content">
 			<p>{transcription}</p>
@@ -143,7 +146,9 @@
 					<ActionDropdown>
 						{#snippet items()}
 							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-							<li><button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button></li>
+							<li>
+								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+							</li>
 						{/snippet}
 					</ActionDropdown>
 				</div>
@@ -165,7 +170,7 @@
 			<input type="hidden" name="itemId" value={savedItems[0]?.id} />
 			<button
 				type="submit"
-				class="btn btn-circle btn-lg btn-ghost"
+				class="btn btn-circle btn-ghost btn-lg"
 				disabled={savedItems.length === 0}
 				aria-label="Undo last item"
 			>
@@ -192,7 +197,7 @@
 		{/if}
 
 		<button
-			class="btn btn-circle btn-lg btn-ghost"
+			class="btn btn-circle btn-ghost btn-lg"
 			aria-label="Add item manually"
 			onclick={() => addItemDialog?.showModal()}
 		>
@@ -250,7 +255,7 @@
 			<input type="hidden" name="itemId" value={selectedItem?.id} />
 			<label class="flex flex-col gap-1">
 				<span class="text-sm font-medium">Product</span>
-				<select name="productId" class="select select-bordered w-full" bind:value={editProductId}>
+				<select name="productId" class="select-bordered select w-full" bind:value={editProductId}>
 					{#each data.products as p (p.id)}
 						<option value={p.id}>{p.name}</option>
 					{/each}
@@ -261,7 +266,7 @@
 				<input
 					type="number"
 					name="quantity"
-					class="input input-bordered w-full"
+					class="input-bordered input w-full"
 					bind:value={editQuantity}
 					min="0"
 					step="any"
@@ -296,7 +301,7 @@
 			<label class="flex flex-col gap-1">
 				<span class="text-sm font-medium">Product</span>
 				<input
-					class="input input-bordered w-full"
+					class="input-bordered input w-full"
 					list="add-products-list"
 					name="productId"
 					bind:value={addProductId}
@@ -314,7 +319,7 @@
 				<input
 					type="number"
 					name="quantity"
-					class="input input-bordered w-full"
+					class="input-bordered input w-full"
 					bind:value={addQuantity}
 					min="0"
 					step="any"

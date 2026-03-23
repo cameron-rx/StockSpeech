@@ -43,7 +43,7 @@
 		{@render children()}
 	</main>
 
-	{#if page.url.pathname !== '/login'}
+	{#if page.url.pathname !== '/login' && !page.url.pathname.endsWith('/record')}
 		<DockNav />
 	{/if}
 </div>
