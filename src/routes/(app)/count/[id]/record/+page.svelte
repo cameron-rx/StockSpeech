@@ -2,10 +2,12 @@
 	import { onMount } from 'svelte';
 	import { MicrophoneIcon, StopIcon, XIcon } from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
 	import { createBrowserClient } from '@supabase/ssr';
 	import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
 	import { AssemblyAIService } from '$lib/services/transcription/assemblyaiService.js';
+	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
@@ -14,6 +16,24 @@
 	const browserSupabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 	let debugString = $state('Debug string');
+
+	let deleteItemDialog = $state<HTMLDialogElement>();
+	let editItemDialog = $state<HTMLDialogElement>();
+	let selectedItem = $state<StockItem | null>(null);
+	let editProductId = $state('');
+	let editQuantity = $state<number | null>(null);
+
+	function openDeleteItem(item: StockItem) {
+		selectedItem = item;
+		deleteItemDialog?.showModal();
+	}
+
+	function openEditItem(item: StockItem) {
+		selectedItem = item;
+		editProductId = data.products.find((p) => p.name === item.itemName)?.id ?? '';
+		editQuantity = item.count;
+		editItemDialog?.showModal();
+	}
 
 	let transcriptionService = new AssemblyAIService(data.keywords);
 
@@ -114,7 +134,15 @@
 				class="flex items-center justify-between rounded-xl border border-base-content/10 px-4 py-3"
 			>
 				<span class="font-medium">{item.itemName}</span>
-				<span class="badge badge-neutral">{item.count}</span>
+				<div class="flex items-center gap-2">
+					<span class="badge badge-neutral">{item.count}</span>
+					<ActionDropdown>
+						{#snippet items()}
+							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+							<li><button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button></li>
+						{/snippet}
+					</ActionDropdown>
+				</div>
 			</div>
 		{/each}
 	</div>
@@ -139,3 +167,80 @@
 		{/if}
 	</div>
 </div>
+
+<dialog bind:this={deleteItemDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Delete item?</h3>
+		<p class="py-4 text-sm text-base-content/60">
+			Remove "{selectedItem?.itemName ?? 'this item'}" from the count?
+		</p>
+		<div class="modal-action">
+			<button class="btn btn-ghost" onclick={() => deleteItemDialog?.close()}>Cancel</button>
+			<form
+				method="POST"
+				action="?/deleteItem"
+				use:enhance={() =>
+					async ({ update }) => {
+						const id = selectedItem?.id;
+						deleteItemDialog?.close();
+						savedItems = savedItems.filter((i) => i.id !== id);
+						await update({ invalidateAll: false });
+					}}
+			>
+				<input type="hidden" name="itemId" value={selectedItem?.id} />
+				<button type="submit" class="btn btn-error">Delete</button>
+			</form>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog bind:this={editItemDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Edit item</h3>
+		<form
+			method="POST"
+			action="?/editItem"
+			use:enhance={() =>
+				async ({ update }) => {
+					const id = selectedItem?.id;
+					const name = data.products.find((p) => p.id === editProductId)?.name ?? '';
+					const qty = editQuantity ?? 0;
+					editItemDialog?.close();
+					savedItems = savedItems.map((i) =>
+						i.id === id ? { ...i, itemName: name, count: qty } : i
+					);
+					await update({ invalidateAll: false });
+				}}
+			class="flex flex-col gap-4 pt-4"
+		>
+			<input type="hidden" name="itemId" value={selectedItem?.id} />
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Product</span>
+				<select name="productId" class="select select-bordered w-full" bind:value={editProductId}>
+					{#each data.products as p (p.id)}
+						<option value={p.id}>{p.name}</option>
+					{/each}
+				</select>
+			</label>
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Quantity</span>
+				<input
+					type="number"
+					name="quantity"
+					class="input input-bordered w-full"
+					bind:value={editQuantity}
+					min="0"
+					step="any"
+				/>
+			</label>
+			<div class="modal-action mt-0">
+				<button type="button" class="btn btn-ghost" onclick={() => editItemDialog?.close()}>
+					Cancel
+				</button>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div>
+		</form>
+	</div>
+	<form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>

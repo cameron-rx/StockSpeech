@@ -1,5 +1,5 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: count } = await locals.supabase
@@ -21,4 +21,25 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		keywords,
 		products
 	};
+};
+
+export const actions: Actions = {
+	deleteItem: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const itemId = formData.get('itemId') as string;
+		const { error } = await locals.supabase.from('count_items').delete().eq('id', itemId);
+		if (error) return fail(500, { error: error.message });
+	},
+
+	editItem: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const itemId = formData.get('itemId') as string;
+		const productId = formData.get('productId') as string;
+		const quantity = Number(formData.get('quantity'));
+		const { error } = await locals.supabase
+			.from('count_items')
+			.update({ product_id: productId, quantity })
+			.eq('id', itemId);
+		if (error) return fail(500, { error: error.message });
+	}
 };
