@@ -19,6 +19,7 @@
 
 	let editCountName = $state('');
 	let activeTab = $state<'items' | 'totals'>('items');
+	let totalsSearch = $state('');
 
 	type Item = (typeof data.items)[0];
 	let selectedItem = $state<Item | null>(null);
@@ -49,6 +50,12 @@
 				{}
 			)
 		).sort((a, b) => a.name.localeCompare(b.name))
+	);
+
+	const filteredTotals = $derived(
+		totalsSearch.trim()
+			? totals.filter((r) => r.name.toLowerCase().includes(totalsSearch.toLowerCase()))
+			: totals
 	);
 
 	function openEditItem(item: Item) {
@@ -99,7 +106,7 @@
 		<button
 			role="tab"
 			class="tab {activeTab === 'items' ? 'tab-active' : ''}"
-			onclick={() => (activeTab = 'items')}
+			onclick={() => { activeTab = 'items'; totalsSearch = ''; }}
 		>
 			Items
 		</button>
@@ -140,7 +147,13 @@
 	{/if}
 
 	{#if activeTab === 'totals'}
-		{#each totals as row (row.name)}
+		<input
+			type="search"
+			class="input input-bordered w-full"
+			placeholder="Search products…"
+			bind:value={totalsSearch}
+		/>
+		{#each filteredTotals as row (row.name)}
 			<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
 				<div>
 					<span class="font-medium">{row.name}</span>
@@ -151,7 +164,7 @@
 				<span class="text-lg font-semibold">{row.total}</span>
 			</div>
 		{:else}
-			<p class="text-base-content/60 text-sm">No items recorded yet.</p>
+			<p class="text-base-content/60 text-sm">No matching products.</p>
 		{/each}
 	{/if}
 </div>
