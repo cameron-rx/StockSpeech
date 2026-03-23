@@ -4,6 +4,11 @@ import { StreamingTranscriber } from 'assemblyai';
 
 const CHUNK_SAMPLES = 1600; // 100ms at 16kHz
 
+const NUMBER_KEYTERMS = [
+	'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+	'eleven', 'twelve', 'dozen', 'half', 'quarter'
+];
+
 export class AssemblyAIService implements TranscriptionService {
 	private mic = new MicrophoneService();
 	private transcriber: StreamingTranscriber | null = null;
@@ -12,7 +17,7 @@ export class AssemblyAIService implements TranscriptionService {
 	private bufferSamples = 0;
 
 	constructor(keywords: string[] = []) {
-		this.keywords = keywords;
+		this.keywords = [...new Set([...keywords, ...NUMBER_KEYTERMS])];
 	}
 
 	async start(onTranscript: (text: string, isFinal: boolean) => void): Promise<void> {
