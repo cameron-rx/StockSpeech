@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { MicrophoneIcon, StopIcon, XIcon } from 'phosphor-svelte';
+	import { MicrophoneIcon, StopIcon, XIcon, ArrowCounterClockwiseIcon, PlusIcon } from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { createBrowserClient } from '@supabase/ssr';
@@ -19,6 +19,9 @@
 
 	let deleteItemDialog = $state<HTMLDialogElement>();
 	let editItemDialog = $state<HTMLDialogElement>();
+	let addItemDialog = $state<HTMLDialogElement>();
+	let addProductId = $state('');
+	let addQuantity = $state<number | null>(null);
 	let selectedItem = $state<StockItem | null>(null);
 	let editProductId = $state('');
 	let editQuantity = $state<number | null>(null);
@@ -35,7 +38,8 @@
 		editItemDialog?.showModal();
 	}
 
-	let transcriptionService = new AssemblyAIService(data.keywords);
+	const { keywords } = data;
+	let transcriptionService = new AssemblyAIService(keywords);
 
 	onMount(() => {
 		const channel = browserSupabase
@@ -148,6 +152,27 @@
 	</div>
 
 	<div class="flex w-full flex-row items-center justify-center gap-8">
+		<form
+			method="POST"
+			action="?/deleteItem"
+			use:enhance={() =>
+				async ({ update }) => {
+					const id = savedItems[0]?.id;
+					savedItems = savedItems.filter((i) => i.id !== id);
+					await update({ invalidateAll: false });
+				}}
+		>
+			<input type="hidden" name="itemId" value={savedItems[0]?.id} />
+			<button
+				type="submit"
+				class="btn btn-circle btn-lg btn-ghost"
+				disabled={savedItems.length === 0}
+				aria-label="Undo last item"
+			>
+				<ArrowCounterClockwiseIcon weight="bold" size={24} />
+			</button>
+		</form>
+
 		{#if !isRecording}
 			<button
 				onclick={() => startRecording()}
@@ -165,6 +190,14 @@
 				<StopIcon color="white" weight="bold" />
 			</button>
 		{/if}
+
+		<button
+			class="btn btn-circle btn-lg btn-ghost"
+			aria-label="Add item manually"
+			onclick={() => addItemDialog?.showModal()}
+		>
+			<PlusIcon weight="bold" size={24} />
+		</button>
 	</div>
 </div>
 
@@ -239,6 +272,59 @@
 					Cancel
 				</button>
 				<button type="submit" class="btn btn-primary">Save</button>
+			</div>
+		</form>
+	</div>
+	<form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<dialog bind:this={addItemDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Add item</h3>
+		<form
+			method="POST"
+			action="?/addItem"
+			use:enhance={() =>
+				async ({ update }) => {
+					addItemDialog?.close();
+					addProductId = '';
+					addQuantity = null;
+					await update({ invalidateAll: false });
+				}}
+			class="flex flex-col gap-4 pt-4"
+		>
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Product</span>
+				<input
+					class="input input-bordered w-full"
+					list="add-products-list"
+					name="productId"
+					bind:value={addProductId}
+					placeholder="Search products..."
+					autocomplete="off"
+				/>
+				<datalist id="add-products-list">
+					{#each data.products as p (p.id)}
+						<option value={p.name}></option>
+					{/each}
+				</datalist>
+			</label>
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-medium">Quantity</span>
+				<input
+					type="number"
+					name="quantity"
+					class="input input-bordered w-full"
+					bind:value={addQuantity}
+					min="0"
+					step="any"
+				/>
+			</label>
+			<div class="modal-action mt-0">
+				<button type="button" class="btn btn-ghost" onclick={() => addItemDialog?.close()}>
+					Cancel
+				</button>
+				<button type="submit" class="btn btn-primary">Add</button>
 			</div>
 		</form>
 	</div>

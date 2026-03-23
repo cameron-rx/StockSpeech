@@ -41,5 +41,24 @@ export const actions: Actions = {
 			.update({ product_id: productId, quantity })
 			.eq('id', itemId);
 		if (error) return fail(500, { error: error.message });
+	},
+
+	addItem: async ({ request, locals, params }) => {
+		const formData = await request.formData();
+		const productName = formData.get('productId') as string;
+		const quantity = Number(formData.get('quantity'));
+
+		const { data: product } = await locals.supabase
+			.from('products')
+			.select('id')
+			.ilike('name', productName)
+			.single();
+
+		if (!product) return fail(400, { error: 'Product not found' });
+
+		const { error } = await locals.supabase
+			.from('count_items')
+			.insert({ stock_count_id: params.id, product_id: product.id, quantity });
+		if (error) return fail(500, { error: error.message });
 	}
 };
