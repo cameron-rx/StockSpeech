@@ -76,7 +76,6 @@
 			)
 			.subscribe((status, err) => {
 				console.log('Realtime status:', status, err);
-				debugString = `${status} : ${err}`;
 			});
 
 		return () => {
