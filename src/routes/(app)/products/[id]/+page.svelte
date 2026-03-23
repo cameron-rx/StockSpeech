@@ -59,7 +59,7 @@
 </div>
 
 <FAB onclick={() => addDialog?.showModal()}>
-	{#snippet children()}<PlusIcon weight="bold" />{/snippet}
+	<PlusIcon weight="bold" />
 </FAB>
 
 <dialog bind:this={addDialog} class="modal">

@@ -18,6 +18,7 @@
 	let editItemDialog = $state<HTMLDialogElement>();
 
 	let editCountName = $state('');
+	let activeTab = $state<'items' | 'totals'>('items');
 
 	type Item = (typeof data.items)[0];
 	let selectedItem = $state<Item | null>(null);
@@ -32,6 +33,23 @@
 		selectedItem = item;
 		deleteItemDialog?.showModal();
 	}
+
+	const totals = $derived(
+		Object.values(
+			data.items.reduce<Record<string, { name: string; unit: string | null | undefined; total: number }>>(
+				(acc, item) => {
+					const product = getProduct(item);
+					const id = (product as { id?: string } | null)?.id ?? product?.name ?? 'unknown';
+					if (!acc[id]) {
+						acc[id] = { name: product?.name ?? 'Unknown', unit: product?.unit, total: 0 };
+					}
+					acc[id].total += item.quantity ?? 0;
+					return acc;
+				},
+				{}
+			)
+		).sort((a, b) => a.name.localeCompare(b.name))
+	);
 
 	function openEditItem(item: Item) {
 		selectedItem = item;
@@ -77,35 +95,70 @@
 		</div>
 	</div>
 
-	{#each data.items as item (item.id)}
-		{@const product = getProduct(item)}
-		<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
-			<div>
-				<span class="font-medium">{product?.name ?? 'Unknown'}</span>
-				{#if product?.unit}
-					<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
-				{/if}
+	<div role="tablist" class="tabs tabs-border">
+		<button
+			role="tab"
+			class="tab {activeTab === 'items' ? 'tab-active' : ''}"
+			onclick={() => (activeTab = 'items')}
+		>
+			Items
+		</button>
+		<button
+			role="tab"
+			class="tab {activeTab === 'totals' ? 'tab-active' : ''}"
+			onclick={() => (activeTab = 'totals')}
+		>
+			Totals
+		</button>
+	</div>
+
+	{#if activeTab === 'items'}
+		{#each data.items as item (item.id)}
+			{@const product = getProduct(item)}
+			<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
+				<div>
+					<span class="font-medium">{product?.name ?? 'Unknown'}</span>
+					{#if product?.unit}
+						<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
+					{/if}
+				</div>
+				<div class="flex items-center gap-2">
+					<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
+					<ActionDropdown>
+						{#snippet items()}
+							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+							<li>
+								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+							</li>
+						{/snippet}
+					</ActionDropdown>
+				</div>
 			</div>
-			<div class="flex items-center gap-2">
-				<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
-				<ActionDropdown>
-					{#snippet items()}
-						<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-						<li>
-							<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-						</li>
-					{/snippet}
-				</ActionDropdown>
+		{:else}
+			<p class="text-base-content/60 text-sm">No items recorded yet.</p>
+		{/each}
+	{/if}
+
+	{#if activeTab === 'totals'}
+		{#each totals as row (row.name)}
+			<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
+				<div>
+					<span class="font-medium">{row.name}</span>
+					{#if row.unit}
+						<span class="ml-2 text-sm text-base-content/60">{row.unit}</span>
+					{/if}
+				</div>
+				<span class="text-lg font-semibold">{row.total}</span>
 			</div>
-		</div>
-	{:else}
-		<p class="text-base-content/60 text-sm">No items recorded yet.</p>
-	{/each}
+		{:else}
+			<p class="text-base-content/60 text-sm">No items recorded yet.</p>
+		{/each}
+	{/if}
 </div>
 
 {#if !completed}
 	<FAB href={resolve(`/count/${data.count.id}/record`)}>
-		{#snippet children()}<MicrophoneIcon weight="bold" />{/snippet}
+		<MicrophoneIcon weight="bold" />
 	</FAB>
 {/if}
 
