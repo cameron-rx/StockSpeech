@@ -54,7 +54,12 @@ export const actions: Actions = {
 		}
 
 		const arrayBuffer = await file.arrayBuffer();
-		const base64 = Buffer.from(arrayBuffer).toString('base64');
+		const uint8Array = new Uint8Array(arrayBuffer);
+		let binary = '';
+		for (let i = 0; i < uint8Array.length; i++) {
+			binary += String.fromCharCode(uint8Array[i]);
+		}
+		const base64 = btoa(binary);
 		const dataUrl = `data:${file.type};base64,${base64}`;
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
