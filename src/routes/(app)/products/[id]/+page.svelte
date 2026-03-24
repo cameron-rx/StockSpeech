@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PlusIcon } from 'phosphor-svelte';
+	import { PlusIcon, FileIcon, PencilSimpleIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
@@ -12,6 +12,7 @@
 	let addDialog = $state<HTMLDialogElement>();
 	let deleteProductDialog = $state<HTMLDialogElement>();
 	let editProductDialog = $state<HTMLDialogElement>();
+	let fileDialog = $state<HTMLDialogElement>();
 
 	type Product = (typeof data.products)[0];
 	let selectedProduct = $state<Product | null>(null);
@@ -31,13 +32,15 @@
 	}
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Products', href: resolve('/products') }, { label: data.productList.name }]} />
+<Breadcrumbs
+	crumbs={[{ label: 'Products', href: resolve('/products') }, { label: data.productList.name }]}
+/>
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<h1 class="text-2xl font-bold">{data.productList.name}</h1>
 
 	{#each data.products as product (product.id)}
-		<div class="bg-base-100 flex items-center justify-between rounded-lg p-4 shadow-sm">
+		<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
 			<div class="flex items-center gap-2">
 				<span class="font-medium">{product.name}</span>
 				{#if product.unit}
@@ -58,9 +61,25 @@
 	{/each}
 </div>
 
-<FAB onclick={() => addDialog?.showModal()}>
-	<PlusIcon weight="bold" />
-</FAB>
+<div class="fab">
+	<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
+	<div tabindex="0" role="button" class="btn btn-circle btn-lg btn-primary">
+		<PlusIcon weight="bold"></PlusIcon>
+	</div>
+
+	<!-- close button should not be focusable so it can close the FAB when clicked. It's just a visual placeholder -->
+	<div class="fab-close">
+		Close <span class="btn btn-circle btn-lg btn-error">✕</span>
+	</div>
+
+	<!-- buttons that show up when FAB is open -->
+	<button class="btn btn-circle btn-lg" onclick={() => addDialog?.showModal()}>
+		<PencilSimpleIcon weight="bold"></PencilSimpleIcon>
+	</button>
+	<button class="btn btn-circle btn-lg" onclick={() => fileDialog?.showModal()}>
+		<FileIcon weight="bold"></FileIcon>
+	</button>
+</div>
 
 <dialog bind:this={addDialog} class="modal">
 	<div class="modal-box">
@@ -78,12 +97,43 @@
 			</label>
 
 			{#if form?.error}
-				<p class="text-error mb-4 text-sm">{form.error}</p>
+				<p class="mb-4 text-sm text-error">{form.error}</p>
 			{/if}
 
 			<div class="modal-action">
-				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}>Cancel</button>
+				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}
+					>Cancel</button
+				>
 				<button type="submit" class="btn btn-primary">Add</button>
+			</div>
+		</form>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
+
+<dialog bind:this={fileDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="mb-4 text-lg font-bold">Upload Product List</h3>
+
+		<form method="POST" action="?/uploadProducts" enctype="multipart/form-data" use:enhance>
+			<input
+				class="file-input"
+				accept=".pdf, image/*"
+				id="productList"
+				name="productList"
+				type="file"
+			/>
+			{#if form?.error}
+				<p class="mb-4 text-sm text-error">{form.error}</p>
+			{/if}
+
+			<div class="modal-action">
+				<button type="button" class="btn btn-ghost" onclick={() => fileDialog?.close()}
+					>Cancel</button
+				>
+				<button type="submit" class="btn btn-primary">Upload</button>
 			</div>
 		</form>
 	</div>
