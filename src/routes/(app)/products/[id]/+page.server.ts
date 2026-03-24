@@ -51,6 +51,12 @@ export const actions: Actions = {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const apiKey = (platform?.env as any)?.OPENAI_API_KEY ?? OPEN_AI_API_KEY;
 		const client = new OpenAI({ apiKey });
+		const systemPrompt = `You are a stock management assistant. Extract a product list from the provided file.
+		Return ONLY valid JSON in this exact format, no markdown, no explanation:
+		{"products":[{"name":"string","unit":"string or null"}]}
+		- unit should be the unit of measure if present (e.g. bottle, kg, case), otherwise null
+		- include every distinct product you can identify
+		- normalise product names to title case`;
 
 		const response = await client.responses.create({
 			model: 'gpt-5',
@@ -65,11 +71,12 @@ export const actions: Actions = {
 						},
 						{
 							type: 'input_text',
-							text: 'Give me a summary of this file'
+							text: 'Extract products from this file'
 						}
 					]
 				}
-			]
+			],
+			instructions: systemPrompt
 		});
 
 		console.log(response.output_text);

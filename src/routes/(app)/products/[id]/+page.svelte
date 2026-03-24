@@ -5,7 +5,6 @@
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
-	import FAB from '$lib/components/FAB.svelte';
 
 	let { data, form } = $props();
 
@@ -13,6 +12,9 @@
 	let deleteProductDialog = $state<HTMLDialogElement>();
 	let editProductDialog = $state<HTMLDialogElement>();
 	let fileDialog = $state<HTMLDialogElement>();
+
+	let fileIsUploading = $state<boolean>(false);
+	let fileIsUploaded = $state<boolean>(false);
 
 	type Product = (typeof data.products)[0];
 	let selectedProduct = $state<Product | null>(null);
@@ -29,6 +31,12 @@
 		editName = product.name;
 		editUnit = product.unit ?? '';
 		editProductDialog?.showModal();
+	}
+
+	function closeFileDialog() {
+		fileDialog?.close();
+		fileIsUploaded = false;
+		fileIsUploading = false;
 	}
 </script>
 
@@ -117,28 +125,48 @@
 	<div class="modal-box">
 		<h3 class="mb-4 text-lg font-bold">Upload Product List</h3>
 
-		<form method="POST" action="?/uploadProducts" enctype="multipart/form-data" use:enhance>
-			<input
-				class="file-input"
-				accept=".pdf, image/*"
-				id="productList"
-				name="productList"
-				type="file"
-			/>
-			{#if form?.error}
-				<p class="mb-4 text-sm text-error">{form.error}</p>
-			{/if}
-
+		{#if fileIsUploaded}
+			<span>You file has successfully uploaded</span>
 			<div class="modal-action">
-				<button type="button" class="btn btn-ghost" onclick={() => fileDialog?.close()}
-					>Cancel</button
-				>
-				<button type="submit" class="btn btn-primary">Upload</button>
+				<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}>Exit</button>
 			</div>
-		</form>
+		{:else if !fileIsUploading}
+			<form
+				method="POST"
+				action="?/uploadProducts"
+				enctype="multipart/form-data"
+				use:enhance={() => {
+					fileIsUploading = true;
+					return async ({ update }) => {
+						fileIsUploaded = true;
+						await update();
+					};
+				}}
+			>
+				<input
+					class="file-input"
+					accept=".pdf, image/*"
+					id="productList"
+					name="productList"
+					type="file"
+				/>
+				{#if form?.error}
+					<p class="mb-4 text-sm text-error">{form.error}</p>
+				{/if}
+
+				<div class="modal-action">
+					<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}
+						>Cancel</button
+					>
+					<button type="submit" class="btn btn-primary">Upload</button>
+				</div>
+			</form>
+		{:else}
+			<span class="loading loading-xl loading-spinner"></span>
+		{/if}
 	</div>
 	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
+		<button onclick={() => closeFileDialog()}>close</button>
 	</form>
 </dialog>
 
