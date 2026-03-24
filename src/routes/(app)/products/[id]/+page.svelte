@@ -35,8 +35,10 @@
 
 	function closeFileDialog() {
 		fileDialog?.close();
-		fileIsUploaded = false;
-		fileIsUploading = false;
+		if (fileIsUploaded || !fileIsUploading) {
+			fileIsUploaded = false;
+			fileIsUploading = false;
+		}
 	}
 </script>
 
@@ -77,7 +79,7 @@
 
 	<!-- close button should not be focusable so it can close the FAB when clicked. It's just a visual placeholder -->
 	<div class="fab-close">
-		Close <span class="btn btn-circle btn-lg btn-error">✕</span>
+		<span class="btn btn-circle btn-lg btn-error">✕</span>
 	</div>
 
 	<!-- buttons that show up when FAB is open -->

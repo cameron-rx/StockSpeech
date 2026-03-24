@@ -3,6 +3,15 @@ import OpenAI from 'openai';
 import { OPEN_AI_API_KEY } from '$env/static/private';
 import type { Actions, PageServerLoad } from './$types';
 
+type ImportedProduct = {
+	name: string;
+	unit: string | null;
+};
+
+type ProductImportResponse = {
+	products: ImportedProduct[];
+};
+
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: productList } = await locals.supabase
 		.from('product_lists')
@@ -59,7 +68,7 @@ export const actions: Actions = {
 		- normalise product names to title case`;
 
 		const response = await client.responses.create({
-			model: 'gpt-5',
+			model: 'gpt-5-nano',
 			input: [
 				{
 					role: 'user',
@@ -79,7 +88,14 @@ export const actions: Actions = {
 			instructions: systemPrompt
 		});
 
-		console.log(response.output_text);
+		const res = JSON.parse(response.output_text) as ProductImportResponse;
+		const productsToInsert = res.products.map((p) => {
+			return { name: p.name, unit: p.unit, product_list_id: params.id };
+		});
+
+		const { error } = await locals.supabase.from('products').insert(productsToInsert);
+
+		if (error) return fail(500, { error: error.message });
 	},
 
 	deleteProduct: async ({ locals, request }) => {
