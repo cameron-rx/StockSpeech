@@ -123,7 +123,7 @@
 	};
 </script>
 
-<div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
+<div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4 pb-32">
 	<div class="flex w-full justify-end">
 		<a
 			href={resolve(`/count/${data.count.id}`)}
@@ -143,7 +143,7 @@
 		</div>
 	</div>
 
-	<div class="flex w-full grow flex-col gap-2 overflow-y-auto">
+	<div class="flex w-full flex-col gap-2">
 		{#each savedItems as item (item.id)}
 			<div class="flex rounded-xl border border-base-content/10">
 				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
@@ -167,7 +167,10 @@
 		{/each}
 	</div>
 
-	<div class="flex w-full flex-row items-center justify-center gap-8">
+</div>
+
+<div class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]">
+	<div class="bg-base-200 flex flex-row items-center gap-8 rounded-full px-6 py-3 shadow-lg">
 		<form
 			method="POST"
 			action="?/deleteItem"
