@@ -6,6 +6,7 @@
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
+	import CountCard from '$lib/components/CountCard.svelte';
 
 	let { data, form } = $props();
 
@@ -27,39 +28,30 @@
 		editName = count.name;
 		editCountDialog?.showModal();
 	}
+
 </script>
 
-<div class="mx-4 my-4 flex h-auto w-auto flex-col gap-8">
+<div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
 	{#each data.counts as count (count.id)}
-		<div class="card card-xs w-full bg-base-100 shadow-sm">
-			<div class="flex items-stretch">
-				<a href={resolve(`/count/${count.id}`)} class="card-body flex-1">
-					<div class="flex flex-row items-start justify-between gap-2">
-						<h2 class="card-title">{count.name}</h2>
-						<div class="flex flex-row flex-wrap justify-end gap-2">
-							{#if count.productListName}
-								<div class="badge badge-soft badge-primary">{count.productListName}</div>
-							{/if}
-							<div class="badge {count.completed ? 'badge-success' : 'badge-warning'}">
-								{count.completed ? 'Completed' : 'In Progress'}
-							</div>
-						</div>
-					</div>
-					<p>{count.userName}</p>
-					<p>{count.date.toLocaleDateString()}</p>
-				</a>
-				<div class="flex items-start pt-3 pr-3">
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditCount(count)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteCount(count)}>Delete</button>
-							</li>
-						{/snippet}
-					</ActionDropdown>
-				</div>
-			</div>
-		</div>
+		<CountCard
+			name={count.name}
+			completed={count.completed}
+			userName={count.userName}
+			date={count.date}
+			productListName={count.productListName}
+			href={resolve(`/count/${count.id}`)}
+		>
+			{#snippet actions()}
+				<ActionDropdown>
+					{#snippet items()}
+						<li><button onclick={() => openEditCount(count)}>Edit</button></li>
+						<li>
+							<button class="text-error" onclick={() => openDeleteCount(count)}>Delete</button>
+						</li>
+					{/snippet}
+				</ActionDropdown>
+			{/snippet}
+		</CountCard>
 	{:else}
 		<p class="text-base-content/60 text-sm">No counts yet. Start one with the + button.</p>
 	{/each}

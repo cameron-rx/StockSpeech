@@ -13,11 +13,11 @@
 
 <div class="fab {bottom === '24' ? 'bottom-24' : 'bottom-20'}">
 	{#if href}
-		<a {href} class="btn btn-circle btn-lg btn-primary">
+		<a {href} class="btn btn-circle btn-xl btn-primary">
 			{@render children()}
 		</a>
 	{:else}
-		<button class="btn btn-circle btn-lg btn-primary" {onclick}>
+		<button class="btn btn-circle btn-xl btn-primary" {onclick}>
 			{@render children()}
 		</button>
 	{/if}

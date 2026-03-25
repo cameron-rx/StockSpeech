@@ -15,7 +15,7 @@ type ProductImportResponse = {
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: productList } = await locals.supabase
 		.from('product_lists')
-		.select('id, name')
+		.select('id, name, creator:profiles!created_by(full_name)')
 		.eq('id', params.id)
 		.single();
 
@@ -27,7 +27,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.eq('product_list_id', params.id)
 		.order('display_order');
 
-	return { productList: productList!, products: products ?? [] };
+	const c = productList!.creator;
+	const userName = (Array.isArray(c) ? c[0] : c)?.full_name ?? 'Unknown';
+
+	return { productList: { ...productList!, userName }, products: products ?? [] };
 };
 
 export const actions: Actions = {
@@ -126,5 +129,30 @@ export const actions: Actions = {
 			.eq('id', productId);
 
 		if (error) return fail(500, { error: error.message });
+	},
+
+	editList: async ({ locals, params, request }) => {
+		const formData = await request.formData();
+		const name = formData.get('name') as string;
+
+		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+
+		const { error } = await locals.supabase
+			.from('product_lists')
+			.update({ name: name.trim() })
+			.eq('id', params.id);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	deleteList: async ({ locals, params }) => {
+		const { error } = await locals.supabase
+			.from('product_lists')
+			.delete()
+			.eq('id', params.id);
+
+		if (error) return fail(500, { error: error.message });
+
+		redirect(303, '/products');
 	}
 };

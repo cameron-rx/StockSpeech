@@ -5,6 +5,7 @@
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import SimpleCard from '$lib/components/SimpleCard.svelte';
 
 	let { data, form } = $props();
 
@@ -12,6 +13,9 @@
 	let deleteProductDialog = $state<HTMLDialogElement>();
 	let editProductDialog = $state<HTMLDialogElement>();
 	let fileDialog = $state<HTMLDialogElement>();
+	let deleteListDialog = $state<HTMLDialogElement>();
+	let editListDialog = $state<HTMLDialogElement>();
+	let editListName = $state('');
 
 	let fileIsUploading = $state<boolean>(false);
 	let fileIsUploaded = $state<boolean>(false);
@@ -47,24 +51,41 @@
 />
 
 <div class="mx-4 my-4 flex flex-col gap-4">
-	<h1 class="text-2xl font-bold">{data.productList.name}</h1>
-
-	{#each data.products as product (product.id)}
-		<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
-			<div class="flex items-center gap-2">
-				<span class="font-medium">{product.name}</span>
-				{#if product.unit}
-					<span class="badge badge-ghost">{product.unit}</span>
-				{/if}
-			</div>
+	<SimpleCard name={data.productList.name} subtext={data.productList.userName}>
+		{#snippet actions()}
 			<ActionDropdown>
 				{#snippet items()}
-					<li><button onclick={() => openEditProduct(product)}>Edit</button></li>
 					<li>
-						<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+						<button onclick={() => { editListName = data.productList.name; editListDialog?.showModal(); }}>
+							Edit
+						</button>
+					</li>
+					<li>
+						<button class="text-error" onclick={() => deleteListDialog?.showModal()}>Delete</button>
 					</li>
 				{/snippet}
 			</ActionDropdown>
+		{/snippet}
+	</SimpleCard>
+
+	{#each data.products as product (product.id)}
+		<div class="flex rounded-xl border border-base-content/10">
+			<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
+				<span class="font-medium">{product.name}</span>
+				{#if product.unit}
+					<span class="text-xs text-base-content/60">{product.unit}</span>
+				{/if}
+			</div>
+			<div class="flex items-start pt-3 pr-3">
+				<ActionDropdown>
+					{#snippet items()}
+						<li><button onclick={() => openEditProduct(product)}>Edit</button></li>
+						<li>
+							<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+						</li>
+					{/snippet}
+				</ActionDropdown>
+			</div>
 		</div>
 	{:else}
 		<p class="text-base-content/60 text-sm">No products yet. Add one with the + button.</p>
@@ -73,20 +94,20 @@
 
 <div class="fab">
 	<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
-	<div tabindex="0" role="button" class="btn btn-circle btn-lg btn-primary">
+	<div tabindex="0" role="button" class="btn btn-circle btn-xl btn-primary">
 		<PlusIcon weight="bold"></PlusIcon>
 	</div>
 
 	<!-- close button should not be focusable so it can close the FAB when clicked. It's just a visual placeholder -->
 	<div class="fab-close">
-		<span class="btn btn-circle btn-lg btn-error">✕</span>
+		<span class="btn btn-circle btn-xl btn-error">✕</span>
 	</div>
 
 	<!-- buttons that show up when FAB is open -->
-	<button class="btn btn-circle btn-lg" onclick={() => addDialog?.showModal()}>
+	<button class="btn btn-circle btn-xl" onclick={() => addDialog?.showModal()}>
 		<PencilSimpleIcon weight="bold"></PencilSimpleIcon>
 	</button>
-	<button class="btn btn-circle btn-lg" onclick={() => fileDialog?.showModal()}>
+	<button class="btn btn-circle btn-xl" onclick={() => fileDialog?.showModal()}>
 		<FileIcon weight="bold"></FileIcon>
 	</button>
 </div>
@@ -230,3 +251,47 @@
 		<button>close</button>
 	</form>
 </dialog>
+
+<dialog bind:this={editListDialog} class="modal">
+	<div class="modal-box">
+		<h3 class="mb-4 text-lg font-bold">Edit Product List</h3>
+		<form
+			method="POST"
+			action="?/editList"
+			use:enhance={() =>
+				async ({ update }) => {
+					editListDialog?.close();
+					await update();
+				}}
+			class="flex flex-col gap-4"
+		>
+			<label class="floating-label">
+				<input
+					class="input w-full"
+					type="text"
+					name="name"
+					placeholder="Product list name"
+					bind:value={editListName}
+					required
+				/>
+				<span>Name</span>
+			</label>
+			<div class="modal-action mt-0">
+				<button type="button" class="btn btn-ghost" onclick={() => editListDialog?.close()}>
+					Cancel
+				</button>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div>
+		</form>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
+
+<ConfirmDeleteModal
+	bind:dialog={deleteListDialog}
+	title="Delete product list?"
+	message={`This will permanently delete "${data.productList.name}" and all its products.`}
+	action="?/deleteList"
+/>

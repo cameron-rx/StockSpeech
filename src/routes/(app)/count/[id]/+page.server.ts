@@ -4,7 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: count } = await locals.supabase
 		.from('stock_counts')
-		.select('id, name, completed, started_at, product_list:product_lists!product_list_id(name)')
+		.select('id, name, completed, started_at, user:profiles!user_id(full_name), product_list:product_lists!product_list_id(name)')
 		.eq('id', params.id)
 		.single();
 
@@ -23,8 +23,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.select('id, name, unit')
 		.order('name');
 
+	const u = count!.user;
+	const userName = (Array.isArray(u) ? u[0] : u)?.full_name ?? 'Unknown';
+
 	return {
-		count: { ...count!, productListName },
+		count: { ...count!, productListName, userName, date: new Date(count!.started_at) },
 		items: items ?? [],
 		products: products ?? []
 	};

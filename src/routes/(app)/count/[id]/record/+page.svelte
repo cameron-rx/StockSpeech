@@ -123,14 +123,16 @@
 	};
 </script>
 
-<div class="relative flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
-	<a
-		href={resolve(`/count/${data.count.id}`)}
-		class="btn absolute top-4 right-4 btn-square btn-ghost btn-sm"
-		aria-label="Close"
-	>
-		<XIcon weight="bold" size={20} />
-	</a>
+<div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4">
+	<div class="flex w-full justify-end">
+		<a
+			href={resolve(`/count/${data.count.id}`)}
+			class="btn btn-square btn-ghost btn-sm"
+			aria-label="Close"
+		>
+			<XIcon weight="bold" size={20} />
+		</a>
+	</div>
 	<h1 class="text-2xl font-bold">{data.count.name}</h1>
 	{#if data.productListName}
 		<div class="badge badge-soft badge-primary">{data.productListName}</div>
@@ -143,21 +145,23 @@
 
 	<div class="flex w-full grow flex-col gap-2 overflow-y-auto">
 		{#each savedItems as item (item.id)}
-			<div class="flex overflow-hidden rounded-xl border border-base-content/10">
-				<div class="w-1.5 shrink-0 {confidenceClass(item.confidence)}"></div>
-				<div class="flex flex-1 items-center justify-between px-4 py-3">
-					<span class="font-medium">{item.itemName}</span>
-					<div class="flex items-center gap-2">
-						<span class="badge min-w-12 justify-center badge-neutral">{item.count}</span>
-						<ActionDropdown>
-							{#snippet items()}
-								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-								<li>
-									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-								</li>
-							{/snippet}
-						</ActionDropdown>
+			<div class="flex rounded-xl border border-base-content/10">
+				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
+				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
+					<div class="flex items-center justify-between gap-2">
+						<span class="font-medium">{item.itemName}</span>
+						<span class="badge badge-neutral min-w-12 justify-center">{item.count}</span>
 					</div>
+				</div>
+				<div class="flex items-start pt-3 pr-3">
+					<ActionDropdown>
+						{#snippet items()}
+							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+							<li>
+								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+							</li>
+						{/snippet}
+					</ActionDropdown>
 				</div>
 			</div>
 		{/each}
@@ -177,7 +181,7 @@
 			<input type="hidden" name="itemId" value={savedItems[0]?.id} />
 			<button
 				type="submit"
-				class="btn btn-circle btn-ghost btn-lg"
+				class="btn btn-circle btn-ghost btn-xl"
 				disabled={savedItems.length === 0}
 				aria-label="Undo last item"
 			>
@@ -204,7 +208,7 @@
 		{/if}
 
 		<button
-			class="btn btn-circle btn-ghost btn-lg"
+			class="btn btn-circle btn-ghost btn-xl"
 			aria-label="Add item manually"
 			onclick={() => addItemDialog?.showModal()}
 		>

@@ -4,6 +4,7 @@
 	import { MicrophoneIcon } from 'phosphor-svelte';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
+	import CountCard from '$lib/components/CountCard.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
 
@@ -76,18 +77,14 @@
 <Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]} />
 
 <div class="mx-4 my-4 flex flex-col gap-4">
-	<div class="flex items-start justify-between">
-		<div>
-			<h1 class="text-2xl font-bold">{data.count.name}</h1>
-		</div>
-
-		<div class="flex flex-row items-center gap-2">
-			{#if data.count.productListName}
-				<div class="badge badge-soft badge-primary">{data.count.productListName}</div>
-			{/if}
-			<div class="badge {completed ? 'badge-success' : 'badge-warning'}">
-				{completed ? 'Completed' : 'In Progress'}
-			</div>
+	<CountCard
+		name={data.count.name}
+		completed={completed}
+		userName={data.count.userName}
+		date={data.count.date}
+		productListName={data.count.productListName}
+	>
+		{#snippet actions()}
 			<ActionDropdown width="w-36">
 				{#snippet items()}
 					<li>
@@ -102,7 +99,7 @@
 					</li>
 					{#if !completed}
 						<li>
-							<button onclick={() => completeDialog?.showModal()}>Mark Complete</button>
+							<button class="text-success" onclick={() => completeDialog?.showModal()}>Mark Complete</button>
 						</li>
 					{/if}
 					<li>
@@ -110,8 +107,8 @@
 					</li>
 				{/snippet}
 			</ActionDropdown>
-		</div>
-	</div>
+		{/snippet}
+	</CountCard>
 
 	<div role="tablist" class="tabs-border tabs">
 		<button
@@ -136,26 +133,26 @@
 	{#if activeTab === 'items'}
 		{#each data.items as item (item.id)}
 			{@const product = getProduct(item)}
-			<div class="flex overflow-hidden rounded-xl border border-base-content/10">
-				<div class="w-1.5 shrink-0 {confidenceClass(item.confidence)}"></div>
-				<div class="flex flex-1 items-center justify-between px-4 py-3">
-					<div>
+			<div class="flex rounded-xl border border-base-content/10">
+				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
+				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
+					<div class="flex items-center justify-between gap-2">
 						<span class="font-medium">{product?.name ?? 'Unknown'}</span>
-						{#if product?.unit}
-							<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
-						{/if}
+						<span class="badge badge-neutral min-w-12 justify-center">{item.quantity ?? '—'}</span>
 					</div>
-					<div class="flex items-center gap-2">
-						<span class="badge min-w-12 justify-center badge-neutral">{item.quantity ?? '—'}</span>
-						<ActionDropdown>
-							{#snippet items()}
-								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-								<li>
-									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-								</li>
-							{/snippet}
-						</ActionDropdown>
-					</div>
+					{#if product?.unit}
+						<span class="text-xs text-base-content/60">{product.unit}</span>
+					{/if}
+				</div>
+				<div class="flex items-start pt-3 pr-3">
+					<ActionDropdown>
+						{#snippet items()}
+							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+							<li>
+								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+							</li>
+						{/snippet}
+					</ActionDropdown>
 				</div>
 			</div>
 		{:else}
@@ -171,14 +168,16 @@
 			bind:value={totalsSearch}
 		/>
 		{#each filteredTotals as row (row.name)}
-			<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
-				<div>
-					<span class="font-medium">{row.name}</span>
+			<div class="flex rounded-xl border border-base-content/10">
+				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
+					<div class="flex items-center justify-between gap-2">
+						<span class="font-medium">{row.name}</span>
+						<span class="badge badge-neutral min-w-12 justify-center">{row.total}</span>
+					</div>
 					{#if row.unit}
-						<span class="ml-2 text-sm text-base-content/60">{row.unit}</span>
+						<span class="text-xs text-base-content/60">{row.unit}</span>
 					{/if}
 				</div>
-				<span class="text-lg font-semibold">{row.total}</span>
 			</div>
 		{:else}
 			<p class="text-base-content/60 text-sm">No matching products.</p>

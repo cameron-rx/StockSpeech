@@ -38,7 +38,9 @@
 
 <div class="safe-layout flex h-screen flex-col">
 	<main
-		class="main-content relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain pb-24"
+		class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
+		class:main-content={page.url.pathname !== '/login' && !page.url.pathname.endsWith('/record')}
+		class:main-content-no-nav={page.url.pathname === '/login' || page.url.pathname.endsWith('/record')}
 	>
 		{@render children()}
 	</main>

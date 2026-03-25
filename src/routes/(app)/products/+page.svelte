@@ -6,6 +6,7 @@
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
+	import SimpleCard from '$lib/components/SimpleCard.svelte';
 
 	let { data, form } = $props();
 
@@ -29,28 +30,24 @@
 	}
 </script>
 
-<div class="mx-4 my-4 flex h-auto w-auto flex-col gap-8">
+<div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
 	{#each data.productLists as productList (productList.id)}
-		<div class="card w-full bg-base-100 shadow-sm card-xs">
-			<div class="flex items-stretch">
-				<a href={resolve(`/products/${productList.id}`)} class="card-body flex-1">
-					<h2 class="card-title">{productList.name}</h2>
-					<p>{productList.userName}</p>
-				</a>
-				<div class="flex items-start pt-3 pr-3">
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditList(productList)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteList(productList)}
-									>Delete</button
-								>
-							</li>
-						{/snippet}
-					</ActionDropdown>
-				</div>
-			</div>
-		</div>
+		<SimpleCard
+			name={productList.name}
+			subtext={productList.userName}
+			href={resolve(`/products/${productList.id}`)}
+		>
+			{#snippet actions()}
+				<ActionDropdown>
+					{#snippet items()}
+						<li><button onclick={() => openEditList(productList)}>Edit</button></li>
+						<li>
+							<button class="text-error" onclick={() => openDeleteList(productList)}>Delete</button>
+						</li>
+					{/snippet}
+				</ActionDropdown>
+			{/snippet}
+		</SimpleCard>
 	{:else}
 		<p class="text-base-content/60 text-sm">No product lists yet. Create one with the + button.</p>
 	{/each}
