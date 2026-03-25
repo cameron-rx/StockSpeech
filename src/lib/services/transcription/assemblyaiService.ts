@@ -5,8 +5,21 @@ import { StreamingTranscriber } from 'assemblyai';
 const CHUNK_SAMPLES = 1600; // 100ms at 16kHz
 
 const NUMBER_KEYTERMS = [
-	'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-	'eleven', 'twelve', 'dozen', 'half', 'quarter'
+	'one',
+	'two',
+	'three',
+	'four',
+	'five',
+	'six',
+	'seven',
+	'eight',
+	'nine',
+	'ten',
+	'eleven',
+	'twelve',
+	'dozen',
+	'half',
+	'quarter'
 ];
 
 export class AssemblyAIService implements TranscriptionService {
@@ -39,7 +52,6 @@ export class AssemblyAIService implements TranscriptionService {
 		);
 
 		transcriber.on('turn', (turn) => {
-			console.log(turn);
 			if (!turn.transcript) return;
 			onTranscript(turn.transcript, turn.end_of_turn);
 		});
