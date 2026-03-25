@@ -20,6 +20,8 @@
 	let fileIsUploading = $state<boolean>(false);
 	let fileIsUploaded = $state<boolean>(false);
 
+	let productsSearch = $state('');
+
 	type Product = (typeof data.products)[0];
 	let selectedProduct = $state<Product | null>(null);
 	let editName = $state('');
@@ -36,6 +38,12 @@
 		editUnit = product.unit ?? '';
 		editProductDialog?.showModal();
 	}
+
+	const filteredProducts = $derived(
+		productsSearch.trim()
+			? data.products.filter((p) => p.name.toLowerCase().includes(productsSearch.toLowerCase()))
+			: data.products
+	);
 
 	function closeFileDialog() {
 		fileDialog?.close();
@@ -68,7 +76,14 @@
 		{/snippet}
 	</SimpleCard>
 
-	{#each data.products as product (product.id)}
+	<input
+		type="search"
+		class="input-bordered input w-full"
+		placeholder="Search products…"
+		bind:value={productsSearch}
+	/>
+
+	{#each filteredProducts as product (product.id)}
 		<div class="flex rounded-xl border border-base-content/10">
 			<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
 				<span class="font-medium">{product.name}</span>
@@ -88,7 +103,9 @@
 			</div>
 		</div>
 	{:else}
-		<p class="text-base-content/60 text-sm">No products yet. Add one with the + button.</p>
+		<p class="text-base-content/60 text-sm">
+			{productsSearch.trim() ? 'No matching products.' : 'No products yet. Add one with the + button.'}
+		</p>
 	{/each}
 </div>
 
