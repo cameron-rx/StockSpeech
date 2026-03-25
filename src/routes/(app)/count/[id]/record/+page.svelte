@@ -1,12 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		MicrophoneIcon,
-		StopIcon,
-		XIcon,
-		ArrowCounterClockwiseIcon,
-		PlusIcon
-	} from 'phosphor-svelte';
+	import { MicrophoneIcon, StopIcon, ArrowCounterClockwiseIcon, PlusIcon } from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { createBrowserClient } from '@supabase/ssr';
@@ -14,6 +8,7 @@
 	import type { StockItem } from '$lib/services/llm/types';
 	import { AssemblyAIService } from '$lib/services/transcription/assemblyaiService.js';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
@@ -123,34 +118,27 @@
 	};
 </script>
 
-<div class="flex min-h-full w-full flex-col items-center gap-4 px-4 py-4 pb-32">
-	<div class="flex w-full justify-end">
-		<a
-			href={resolve(`/count/${data.count.id}`)}
-			class="btn btn-square btn-ghost btn-sm"
-			aria-label="Close"
-		>
-			<XIcon weight="bold" size={20} />
-		</a>
-	</div>
-	<h1 class="text-2xl font-bold">{data.count.name}</h1>
-	{#if data.productListName}
-		<div class="badge badge-soft badge-primary">{data.productListName}</div>
-	{/if}
-	<div class="card w-full rounded-2xl card-border">
-		<div class="card-body items-center text-center text-base-content">
-			<p>{transcription}</p>
-		</div>
+<Breadcrumbs
+	crumbs={[
+		{ label: 'Counts', href: resolve('/') },
+		{ label: data.count.name, href: resolve(`/count/${data.count.id}`) },
+		{ label: 'Record' }
+	]}
+/>
+
+<div class="mx-4 my-4 flex flex-col gap-4 pb-32">
+	<div class="rounded-xl border border-base-content/10 px-4 py-3">
+		<p class="text-center text-lg text-base-content/60">{transcription}</p>
 	</div>
 
-	<div class="flex w-full flex-col gap-2">
+	<div class="flex flex-col gap-2">
 		{#each savedItems as item (item.id)}
 			<div class="flex rounded-xl border border-base-content/10">
 				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
 				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
 					<div class="flex items-center justify-between gap-2">
 						<span class="font-medium">{item.itemName}</span>
-						<span class="badge badge-neutral min-w-12 justify-center">{item.count}</span>
+						<span class="badge min-w-12 justify-center badge-neutral">{item.count}</span>
 					</div>
 				</div>
 				<div class="flex items-start pt-3 pr-3">
@@ -166,11 +154,12 @@
 			</div>
 		{/each}
 	</div>
-
 </div>
 
-<div class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]">
-	<div class="bg-base-200 flex flex-row items-center gap-8 rounded-full px-6 py-3 shadow-lg">
+<div
+	class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]"
+>
+	<div class="flex flex-row items-center gap-8 rounded-full bg-base-200 px-6 py-3 shadow-lg">
 		<form
 			method="POST"
 			action="?/deleteItem"
