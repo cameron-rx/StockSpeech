@@ -26,13 +26,20 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		.map((item) => {
 			const product = products.find((p) => p.name.toLowerCase() === item.itemName.toLowerCase());
 			return product
-				? { stock_count_id: stockCountId, product_id: product.id, quantity: item.count }
+				? {
+					stock_count_id: stockCountId,
+					product_id: product.id,
+					quantity: item.count,
+					confidence: item.confidence,
+					raw_transcription: transcript
+				}
 				: null;
 		})
 		.filter((item): item is NonNullable<typeof item> => item !== null);
 
 	if (toInsert.length > 0) {
-		await locals.supabase.from('count_items').insert(toInsert);
+		const { error } = await locals.supabase.from('count_items').insert(toInsert);
+		if (error) console.error('[llm-parse] insert error:', error);
 	}
 
 	const stockItems: StockItem[] = llmItems

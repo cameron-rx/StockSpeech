@@ -42,6 +42,13 @@
 		editItemDialog?.showModal();
 	}
 
+	function confidenceClass(score: number | null | undefined): string {
+		if (score == null) return 'bg-base-300';
+		if (score >= 0.9) return 'bg-green-500';
+		if (score >= 0.5) return 'bg-amber-500';
+		return 'bg-red-500';
+	}
+
 	const { keywords } = data;
 	let transcriptionService = new AssemblyAIService(keywords);
 
@@ -66,8 +73,8 @@
 								id: payload.new.id,
 								itemName: product.name,
 								count: payload.new.quantity,
-								confidence: 1,
-								rawTranscript: ''
+								confidence: payload.new.confidence ?? 1,
+								rawTranscript: payload.new.raw_transcription ?? ''
 							},
 							...savedItems
 						];
@@ -136,20 +143,21 @@
 
 	<div class="flex w-full grow flex-col gap-2 overflow-y-auto">
 		{#each savedItems as item (item.id)}
-			<div
-				class="flex items-center justify-between rounded-xl border border-base-content/10 px-4 py-3"
-			>
-				<span class="font-medium">{item.itemName}</span>
-				<div class="flex items-center gap-2">
-					<span class="badge badge-neutral">{item.count}</span>
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-							</li>
-						{/snippet}
-					</ActionDropdown>
+			<div class="flex overflow-hidden rounded-xl border border-base-content/10">
+				<div class="w-1.5 shrink-0 {confidenceClass(item.confidence)}"></div>
+				<div class="flex flex-1 items-center justify-between px-4 py-3">
+					<span class="font-medium">{item.itemName}</span>
+					<div class="flex items-center gap-2">
+						<span class="badge min-w-12 justify-center badge-neutral">{item.count}</span>
+						<ActionDropdown>
+							{#snippet items()}
+								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+								<li>
+									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+								</li>
+							{/snippet}
+						</ActionDropdown>
+					</div>
 				</div>
 			</div>
 		{/each}

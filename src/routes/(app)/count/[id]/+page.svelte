@@ -37,18 +37,17 @@
 
 	const totals = $derived(
 		Object.values(
-			data.items.reduce<Record<string, { name: string; unit: string | null | undefined; total: number }>>(
-				(acc, item) => {
-					const product = getProduct(item);
-					const id = (product as { id?: string } | null)?.id ?? product?.name ?? 'unknown';
-					if (!acc[id]) {
-						acc[id] = { name: product?.name ?? 'Unknown', unit: product?.unit, total: 0 };
-					}
-					acc[id].total += item.quantity ?? 0;
-					return acc;
-				},
-				{}
-			)
+			data.items.reduce<
+				Record<string, { name: string; unit: string | null | undefined; total: number }>
+			>((acc, item) => {
+				const product = getProduct(item);
+				const id = (product as { id?: string } | null)?.id ?? product?.name ?? 'unknown';
+				if (!acc[id]) {
+					acc[id] = { name: product?.name ?? 'Unknown', unit: product?.unit, total: 0 };
+				}
+				acc[id].total += item.quantity ?? 0;
+				return acc;
+			}, {})
 		).sort((a, b) => a.name.localeCompare(b.name))
 	);
 
@@ -57,6 +56,13 @@
 			? totals.filter((r) => r.name.toLowerCase().includes(totalsSearch.toLowerCase()))
 			: totals
 	);
+
+	function confidenceClass(score: number | null | undefined): string {
+		if (score == null) return 'bg-base-300';
+		if (score >= 0.9) return 'bg-green-500';
+		if (score >= 0.5) return 'bg-amber-500';
+		return 'bg-red-500';
+	}
 
 	function openEditItem(item: Item) {
 		selectedItem = item;
@@ -85,7 +91,12 @@
 			<ActionDropdown width="w-36">
 				{#snippet items()}
 					<li>
-						<button onclick={() => { editCountName = data.count.name; editCountDialog?.showModal(); }}>
+						<button
+							onclick={() => {
+								editCountName = data.count.name;
+								editCountDialog?.showModal();
+							}}
+						>
 							Edit
 						</button>
 					</li>
@@ -102,11 +113,14 @@
 		</div>
 	</div>
 
-	<div role="tablist" class="tabs tabs-border">
+	<div role="tablist" class="tabs-border tabs">
 		<button
 			role="tab"
 			class="tab {activeTab === 'items' ? 'tab-active' : ''}"
-			onclick={() => { activeTab = 'items'; totalsSearch = ''; }}
+			onclick={() => {
+				activeTab = 'items';
+				totalsSearch = '';
+			}}
 		>
 			Items
 		</button>
@@ -122,23 +136,26 @@
 	{#if activeTab === 'items'}
 		{#each data.items as item (item.id)}
 			{@const product = getProduct(item)}
-			<div class="flex items-center justify-between rounded-lg bg-base-100 p-4 shadow-sm">
-				<div>
-					<span class="font-medium">{product?.name ?? 'Unknown'}</span>
-					{#if product?.unit}
-						<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
-					{/if}
-				</div>
-				<div class="flex items-center gap-2">
-					<span class="text-lg font-semibold">{item.quantity ?? '—'}</span>
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-							</li>
-						{/snippet}
-					</ActionDropdown>
+			<div class="flex overflow-hidden rounded-xl border border-base-content/10">
+				<div class="w-1.5 shrink-0 {confidenceClass(item.confidence)}"></div>
+				<div class="flex flex-1 items-center justify-between px-4 py-3">
+					<div>
+						<span class="font-medium">{product?.name ?? 'Unknown'}</span>
+						{#if product?.unit}
+							<span class="ml-2 text-sm text-base-content/60">{product.unit}</span>
+						{/if}
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="badge min-w-12 justify-center badge-neutral">{item.quantity ?? '—'}</span>
+						<ActionDropdown>
+							{#snippet items()}
+								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+								<li>
+									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+								</li>
+							{/snippet}
+						</ActionDropdown>
+					</div>
 				</div>
 			</div>
 		{:else}
@@ -149,7 +166,7 @@
 	{#if activeTab === 'totals'}
 		<input
 			type="search"
-			class="input input-bordered w-full"
+			class="input-bordered input w-full"
 			placeholder="Search products…"
 			bind:value={totalsSearch}
 		/>
@@ -272,7 +289,7 @@
 			<input type="hidden" name="itemId" value={selectedItem?.id} />
 			<label class="flex flex-col gap-1">
 				<span class="text-sm font-medium">Product</span>
-				<select name="productId" class="select select-bordered w-full" bind:value={editProductId}>
+				<select name="productId" class="select-bordered select w-full" bind:value={editProductId}>
 					{#each data.products as p (p.id)}
 						<option value={p.id}>{p.name}{p.unit ? ` (${p.unit})` : ''}</option>
 					{/each}
@@ -283,7 +300,7 @@
 				<input
 					type="number"
 					name="quantity"
-					class="input input-bordered w-full"
+					class="input-bordered input w-full"
 					bind:value={editQuantity}
 					min="0"
 					step="any"

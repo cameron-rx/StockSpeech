@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const { data: items } = await locals.supabase
 		.from('count_items')
-		.select('id, quantity, product:products!product_id(id, name, unit)')
+		.select('id, quantity, confidence, product:products!product_id(id, name, unit)')
 		.eq('stock_count_id', params.id);
 
 	const pl = count!.product_list;
