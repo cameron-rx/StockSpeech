@@ -127,8 +127,15 @@
 />
 
 <div class="mx-4 my-4 flex flex-col gap-4 pb-32">
-	<div class="rounded-xl border border-base-content/10 px-4 py-3">
-		<p class="text-center text-lg text-base-content/60">{transcription}</p>
+	<div class="relative rounded-xl px-4 py-3">
+		<div
+			class="absolute inset-0 rounded-xl border-2 transition-colors {isRecording
+				? 'animate-pulse border-accent'
+				: 'border-accent/40'}"
+		></div>
+		<p class="relative text-center text-lg text-base-content/60">
+			{transcription}
+		</p>
 	</div>
 
 	<div class="flex flex-col gap-2">
@@ -159,7 +166,7 @@
 <div
 	class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]"
 >
-	<div class="flex flex-row items-center gap-8 rounded-full bg-base-200 px-6 py-3 shadow-lg">
+	<div class="flex flex-row items-center gap-8 rounded-full bg-primary px-6 py-3 text-primary-content shadow-lg">
 		<form
 			method="POST"
 			action="?/deleteItem"
@@ -174,6 +181,9 @@
 			<button
 				type="submit"
 				class="btn btn-circle btn-ghost btn-xl"
+				style={savedItems.length === 0
+					? '--btn-fg: color-mix(in oklch, var(--color-primary-content) 40%, transparent)'
+					: ''}
 				disabled={savedItems.length === 0}
 				aria-label="Undo last item"
 			>
