@@ -39,9 +39,9 @@
 
 	function confidenceClass(score: number | null | undefined): string {
 		if (score == null) return 'bg-base-300';
-		if (score >= 0.9) return 'bg-green-500';
-		if (score >= 0.5) return 'bg-amber-500';
-		return 'bg-red-500';
+		if (score >= 0.9) return 'bg-success';
+		if (score >= 0.5) return 'bg-warning';
+		return 'bg-error';
 	}
 
 	const { keywords } = data;
@@ -184,7 +184,7 @@
 		{#if !isRecording}
 			<button
 				onclick={() => startRecording()}
-				class="btn btn-circle bg-blue-400 btn-xl"
+				class="btn btn-circle btn-accent btn-xl"
 				aria-label="Toggle Recording"
 			>
 				<MicrophoneIcon color="white" weight="bold" />
@@ -192,7 +192,7 @@
 		{:else}
 			<button
 				onclick={() => stopRecording()}
-				class="btn btn-circle bg-red-400 btn-xl"
+				class="btn btn-circle btn-error btn-xl"
 				aria-label="Toggle Recording"
 			>
 				<StopIcon color="white" weight="bold" />

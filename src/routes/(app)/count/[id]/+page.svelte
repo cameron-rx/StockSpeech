@@ -60,9 +60,9 @@
 
 	function confidenceClass(score: number | null | undefined): string {
 		if (score == null) return 'bg-base-300';
-		if (score >= 0.9) return 'bg-green-500';
-		if (score >= 0.5) return 'bg-amber-500';
-		return 'bg-red-500';
+		if (score >= 0.9) return 'bg-success';
+		if (score >= 0.5) return 'bg-warning';
+		return 'bg-error';
 	}
 
 	function openEditItem(item: Item) {

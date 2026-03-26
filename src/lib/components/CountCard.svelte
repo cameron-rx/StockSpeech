@@ -34,7 +34,7 @@
 </script>
 
 <div class="flex rounded-xl border border-base-content/10">
-	<div class="w-1.5 shrink-0 rounded-l-xl {completed ? 'bg-green-500' : 'bg-amber-500'}"></div>
+	<div class="w-1.5 shrink-0 rounded-l-xl {completed ? 'bg-success' : 'bg-warning'}"></div>
 	<svelte:element this={href ? 'a' : 'div'} {href} class="flex flex-1 flex-col justify-center gap-2 px-4 py-3">
 		<div class="flex items-center justify-between gap-2">
 			<span class="text-lg font-bold">{name}</span>

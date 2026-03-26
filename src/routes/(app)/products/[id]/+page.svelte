@@ -111,7 +111,7 @@
 
 <div class="fab">
 	<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
-	<div tabindex="0" role="button" class="btn btn-circle btn-xl btn-primary">
+	<div tabindex="0" role="button" class="btn btn-circle btn-xl btn-accent">
 		<PlusIcon weight="bold"></PlusIcon>
 	</div>
 
