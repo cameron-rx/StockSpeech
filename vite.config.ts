@@ -15,9 +15,9 @@ export default defineConfig({
 			manifest: {
 				name: 'StockSpeech',
 				short_name: 'StockSpeech',
-				description: 'Stock count assistant',
-				theme_color: '#ffffff',
-				background_color: '#ffffff',
+				description: 'Voice-powered stock counting',
+				theme_color: '#2a1f0e',
+				background_color: '#2a1f0e',
 				display: 'standalone',
 				orientation: 'portrait',
 				scope: '/',
