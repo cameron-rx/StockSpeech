@@ -8,6 +8,9 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		SvelteKitPWA({
+			pwaAssets: {
+				config: true
+			},
 			registerType: 'autoUpdate',
 			manifest: {
 				name: 'StockSpeech',

@@ -4,12 +4,10 @@
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
-	import favicon from '$lib/assets/favicon.svg';
+	import { pwaAssetsHead } from 'virtual:pwa-assets/head';
 	import DockNav from '$lib/components/DockNav.svelte';
 
 	let { data, children } = $props();
-
-	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
 	onMount(async () => {
 		if (pwaInfo) {
@@ -32,8 +30,15 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
-	{@html webManifestLink}
+	{#if pwaAssetsHead.themeColor}
+		<meta name="theme-color" content={pwaAssetsHead.themeColor.content} />
+	{/if}
+	{#each pwaAssetsHead.links as link (link.href)}
+		<link {...link} />
+	{/each}
+	{#if pwaInfo?.webManifest.href}
+		<link rel="manifest" href={pwaInfo.webManifest.href} />
+	{/if}
 </svelte:head>
 
 <div class="safe-layout flex h-screen flex-col">

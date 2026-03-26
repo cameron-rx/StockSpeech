@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { MicrophoneIcon, StopIcon, ArrowCounterClockwiseIcon, PlusIcon } from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -44,8 +44,7 @@
 		return 'bg-error';
 	}
 
-	const { keywords } = data;
-	let transcriptionService = new AssemblyAIService(keywords);
+	let transcriptionService = untrack(() => new AssemblyAIService(data.keywords));
 
 	onMount(() => {
 		const channel = browserSupabase
