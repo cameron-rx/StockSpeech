@@ -6,7 +6,6 @@
 		completed,
 		userName,
 		date,
-		productListName,
 		href,
 		actions
 	}: {
@@ -14,7 +13,6 @@
 		completed: boolean;
 		userName: string;
 		date: Date;
-		productListName: string | null;
 		href?: string;
 		actions: Snippet;
 	} = $props();
@@ -35,12 +33,13 @@
 
 <div class="flex rounded-xl border border-base-content/10">
 	<div class="w-1.5 shrink-0 rounded-l-xl {completed ? 'bg-success' : 'bg-warning'}"></div>
-	<svelte:element this={href ? 'a' : 'div'} {href} class="flex flex-1 flex-col justify-center gap-2 px-4 py-3">
+	<svelte:element
+		this={href ? 'a' : 'div'}
+		{href}
+		class="flex flex-1 flex-col justify-center gap-2 px-4 py-3"
+	>
 		<div class="flex items-center justify-between gap-2">
 			<span class="text-lg font-bold">{name}</span>
-			{#if productListName}
-				<div class="badge badge-soft badge-primary">{productListName}</div>
-			{/if}
 		</div>
 		<span class="text-xs text-base-content/60">
 			{userName}<br />{relativeTime(date)}

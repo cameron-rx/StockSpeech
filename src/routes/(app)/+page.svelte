@@ -2,7 +2,6 @@
 	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { venueState } from '$lib/state/venue.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
@@ -28,7 +27,6 @@
 		editName = count.name;
 		editCountDialog?.showModal();
 	}
-
 </script>
 
 <div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
@@ -38,7 +36,6 @@
 			completed={count.completed}
 			userName={count.userName}
 			date={count.date}
-			productListName={count.productListName}
 			href={resolve(`/count/${count.id}`)}
 		>
 			{#snippet actions()}
@@ -66,21 +63,9 @@
 		<h3 class="mb-4 text-lg font-bold">New Count</h3>
 
 		<form method="POST" action="?/create" use:enhance>
-			<input type="hidden" name="venue_id" value={venueState.value} />
-
 			<label class="floating-label mb-4">
 				<input class="input w-full" type="text" name="name" placeholder="Count name" required />
 				<span>Name</span>
-			</label>
-
-			<label class="floating-label mb-4">
-				<select class="select w-full" name="product_list_id" required>
-					<option value="" disabled selected>Select a product list</option>
-					{#each data.productLists as list (list.id)}
-						<option value={list.id}>{list.name}</option>
-					{/each}
-				</select>
-				<span>Product List</span>
 			</label>
 
 			{#if form?.error}
