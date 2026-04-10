@@ -34,7 +34,6 @@
 		<CountCard
 			name={count.name}
 			completed={count.completed}
-			userName={count.userName}
 			date={count.date}
 			href={resolve(`/count/${count.id}`)}
 		>

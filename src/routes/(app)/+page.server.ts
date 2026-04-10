@@ -2,20 +2,17 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const [{ data: countRows }] = await Promise.all([
-		locals.supabase
-			.from('stock_counts')
-			.select('id, name, completed, started_at, user:profiles!user_id(full_name)')
-			.order('started_at', { ascending: false })
-	]);
+	const { data: countRows } = await locals.supabase
+		.from('stock_counts')
+		.select('id, name, completed, started_at')
+		.order('started_at', { ascending: false });
 
 	const counts =
 		countRows?.map((row) => ({
 			id: row.id,
 			name: row.name,
 			completed: row.completed !== 'in_progress',
-			date: new Date(row.started_at),
-			userName: (Array.isArray(row.user) ? row.user[0] : row.user)?.full_name ?? 'Unknown'
+			date: new Date(row.started_at)
 		})) ?? [];
 
 	return { counts };

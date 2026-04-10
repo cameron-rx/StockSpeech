@@ -4,14 +4,12 @@
 	let {
 		name,
 		completed,
-		userName,
 		date,
 		href,
 		actions
 	}: {
 		name: string;
 		completed: boolean;
-		userName: string;
 		date: Date;
 		href?: string;
 		actions: Snippet;
@@ -42,7 +40,7 @@
 			<span class="text-lg font-bold">{name}</span>
 		</div>
 		<span class="text-xs text-base-content/60">
-			{userName}<br />{relativeTime(date)}
+			{relativeTime(date)}
 		</span>
 	</svelte:element>
 	<div class="flex flex-col items-end gap-1 py-3 pr-3">

@@ -2,32 +2,26 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	const { data: count } = await locals.supabase
-		.from('stock_counts')
-		.select('id, name, completed, started_at, user:profiles!user_id(full_name), product_list:product_lists!product_list_id(name)')
-		.eq('id', params.id)
-		.single();
+	const [{ data: count }, { data: items }, { data: products }] = await Promise.all([
+		locals.supabase
+			.from('stock_counts')
+			.select('id, name, completed, started_at')
+			.eq('id', params.id)
+			.single(),
+		locals.supabase
+			.from('count_items')
+			.select('id, quantity, confidence, product:products!product_id(id, name, unit)')
+			.eq('stock_count_id', params.id),
+		locals.supabase
+			.from('products')
+			.select('id, name, unit')
+			.order('name')
+	]);
 
 	if (!count) redirect(303, '/');
 
-	const { data: items } = await locals.supabase
-		.from('count_items')
-		.select('id, quantity, confidence, product:products!product_id(id, name, unit)')
-		.eq('stock_count_id', params.id);
-
-	const pl = count!.product_list;
-	const productListName = (Array.isArray(pl) ? pl[0] : pl)?.name ?? null;
-
-	const { data: products } = await locals.supabase
-		.from('products')
-		.select('id, name, unit')
-		.order('name');
-
-	const u = count!.user;
-	const userName = (Array.isArray(u) ? u[0] : u)?.full_name ?? 'Unknown';
-
 	return {
-		count: { ...count!, productListName, userName, date: new Date(count!.started_at) },
+		count: { ...count!, date: new Date(count!.started_at) },
 		items: items ?? [],
 		products: products ?? []
 	};
