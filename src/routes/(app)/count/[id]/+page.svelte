@@ -80,9 +80,7 @@
 	<CountCard
 		name={data.count.name}
 		completed={completed}
-		userName={data.count.userName}
 		date={data.count.date}
-		productListName={data.count.productListName}
 	>
 		{#snippet actions()}
 			<ActionDropdown width="w-36">

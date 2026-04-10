@@ -34,8 +34,12 @@ export class AssemblyAIService implements TranscriptionService {
 	}
 
 	async start(onTranscript: (text: string, isFinal: boolean) => void): Promise<void> {
-		const res = await fetch('/api/assemblyai-token', { method: 'POST' });
-		const { access_token } = (await res.json()) as { access_token: string };
+		const [{ access_token }, stream] = await Promise.all([
+			fetch('/api/assemblyai-token', { method: 'POST' }).then(
+				(r) => r.json() as Promise<{ access_token: string }>
+			),
+			navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } })
+		]);
 
 		const transcriber = new StreamingTranscriber({
 			speechModel: 'u3-rt-pro',
@@ -58,7 +62,7 @@ export class AssemblyAIService implements TranscriptionService {
 
 		await transcriber.connect();
 
-		await this.mic.start((chunk: Int16Array) => {
+		await this.mic.startWithStream(stream, (chunk: Int16Array) => {
 			this.buffer.push(chunk);
 			this.bufferSamples += chunk.length;
 

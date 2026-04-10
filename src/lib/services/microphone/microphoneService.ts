@@ -10,9 +10,14 @@ export class MicrophoneService {
   private stream: MediaStream | null = null
 
   async start(onChunk: (chunk: Int16Array) => void): Promise<void> {
-    this.stream = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1 },
     })
+    await this.startWithStream(stream, onChunk)
+  }
+
+  async startWithStream(stream: MediaStream, onChunk: (chunk: Int16Array) => void): Promise<void> {
+    this.stream = stream
 
     this.audioContext = new AudioContext({ sampleRate: this.sampleRate })
     await this.audioContext.audioWorklet.addModule(processorUrl)

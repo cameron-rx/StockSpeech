@@ -2,25 +2,20 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const [{ data: countRows }, { data: productLists }] = await Promise.all([
-		locals.supabase
-			.from('stock_counts')
-			.select('id, name, completed, started_at, user:profiles!user_id(full_name), product_list:product_lists!product_list_id(name)')
-			.order('started_at', { ascending: false }),
-		locals.supabase.from('product_lists').select('id, name')
-	]);
+	const { data: countRows } = await locals.supabase
+		.from('stock_counts')
+		.select('id, name, completed, started_at')
+		.order('started_at', { ascending: false });
 
 	const counts =
 		countRows?.map((row) => ({
 			id: row.id,
 			name: row.name,
 			completed: row.completed !== 'in_progress',
-			date: new Date(row.started_at),
-			userName: (Array.isArray(row.user) ? row.user[0] : row.user)?.full_name ?? 'Unknown',
-			productListName: (Array.isArray(row.product_list) ? row.product_list[0] : row.product_list)?.name ?? null
+			date: new Date(row.started_at)
 		})) ?? [];
 
-	return { counts, productLists: productLists ?? [] };
+	return { counts };
 };
 
 export const actions: Actions = {
@@ -29,19 +24,13 @@ export const actions: Actions = {
 		if (!user) return fail(401, { error: 'Not authenticated' });
 		const formData = await request.formData();
 		const name = formData.get('name') as string;
-		const productListId = formData.get('product_list_id') as string;
-		const venueId = formData.get('venue_id') as string;
 
 		if (!name?.trim()) return fail(400, { error: 'Name is required' });
-		if (!productListId) return fail(400, { error: 'Please select a product list' });
-		if (!venueId) return fail(400, { error: 'No venue selected. Please set one in Settings.' });
 
 		const { data, error } = await locals.supabase
 			.from('stock_counts')
 			.insert({
 				name: name.trim(),
-				product_list_id: productListId,
-				venue_id: venueId,
 				user_id: user.id
 			})
 			.select('id')
