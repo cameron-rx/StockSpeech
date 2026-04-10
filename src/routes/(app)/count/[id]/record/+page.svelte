@@ -8,7 +8,7 @@
 	import type { StockItem } from '$lib/services/llm/types';
 	import { AssemblyAIService } from '$lib/services/transcription/assemblyaiService.js';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+	import { XIcon } from 'phosphor-svelte';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
@@ -43,6 +43,9 @@
 		if (score >= 0.5) return 'bg-warning';
 		return 'bg-error';
 	}
+
+	let isFinalFlash = $state(false);
+	let flashTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	let transcriptionService = untrack(() => new AssemblyAIService(data.keywords));
 
@@ -103,6 +106,9 @@
 			if (isFinal && transcript !== '') {
 				transcription = transcript;
 				parseItem(transcript);
+				isFinalFlash = true;
+				if (flashTimeout) clearTimeout(flashTimeout);
+				flashTimeout = setTimeout(() => { isFinalFlash = false; }, 1000);
 			} else if (transcript !== '') {
 				transcription = transcript;
 			}
@@ -117,13 +123,11 @@
 	};
 </script>
 
-<Breadcrumbs
-	crumbs={[
-		{ label: 'Counts', href: resolve('/') },
-		{ label: data.count.name, href: resolve(`/count/${data.count.id}`) },
-		{ label: 'Record' }
-	]}
-/>
+<div class="flex justify-end px-4 pt-4">
+	<a href={resolve(`/count/${data.count.id}`)} class="btn btn-ghost btn-circle">
+		<XIcon size={20} weight="bold" />
+	</a>
+</div>
 
 <div class="mx-4 my-4 flex flex-col gap-4 pb-32">
 	<div class="relative rounded-xl px-4 py-3">
@@ -132,6 +136,9 @@
 				? 'animate-pulse border-accent'
 				: 'border-accent/40'}"
 		></div>
+		{#if isFinalFlash}
+			<div class="absolute inset-0 animate-ping rounded-xl bg-success/30"></div>
+		{/if}
 		<p class="relative text-center text-lg text-base-content/60">
 			{transcription}
 		</p>
