@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: productRows } = await locals.supabase
 		.from('products')
 		.select('id, name')
+		.eq('active', true)
 		.order('display_order');
 
 	const products = (productRows ?? []).map((p) => ({ id: p.id, name: p.name }));

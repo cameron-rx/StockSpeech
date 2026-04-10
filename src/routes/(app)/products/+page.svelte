@@ -33,10 +33,24 @@
 		editProductDialog?.showModal();
 	}
 
-	const filteredProducts = $derived(
+	const activeProducts = $derived(
+		data.products.filter((p) => p.active)
+	);
+
+	const disabledProducts = $derived(
+		data.products.filter((p) => !p.active)
+	);
+
+	const filteredActive = $derived(
 		productsSearch.trim()
-			? data.products.filter((p) => p.name.toLowerCase().includes(productsSearch.toLowerCase()))
-			: data.products
+			? activeProducts.filter((p) => p.name.toLowerCase().includes(productsSearch.toLowerCase()))
+			: activeProducts
+	);
+
+	const filteredDisabled = $derived(
+		productsSearch.trim()
+			? disabledProducts.filter((p) => p.name.toLowerCase().includes(productsSearch.toLowerCase()))
+			: disabledProducts
 	);
 
 	function closeFileDialog() {
@@ -56,7 +70,7 @@
 		bind:value={productsSearch}
 	/>
 
-	{#each filteredProducts as product (product.id)}
+	{#each filteredActive as product (product.id)}
 		<div class="flex rounded-xl border border-base-content/10">
 			<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
 				<span class="font-medium">{product.name}</span>
@@ -68,9 +82,18 @@
 				<ActionDropdown>
 					{#snippet items()}
 						<li><button onclick={() => openEditProduct(product)}>Edit</button></li>
-						<li>
-							<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
-						</li>
+						{#if product.inUse}
+							<li>
+								<form method="POST" action="?/disableProduct" use:enhance>
+									<input type="hidden" name="productId" value={product.id} />
+									<button type="submit" class="text-warning">Disable</button>
+								</form>
+							</li>
+						{:else}
+							<li>
+								<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+							</li>
+						{/if}
 					{/snippet}
 				</ActionDropdown>
 			</div>
@@ -80,6 +103,37 @@
 			{productsSearch.trim() ? 'No matching products.' : 'No products yet. Add one with the + button.'}
 		</p>
 	{/each}
+
+	{#if filteredDisabled.length > 0}
+		<p class="mt-2 text-xs font-semibold tracking-widest text-base-content/40 uppercase">Disabled</p>
+		{#each filteredDisabled as product (product.id)}
+			<div class="flex rounded-xl border border-base-content/10">
+				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
+					<span class="font-medium text-base-content/40">{product.name}</span>
+					{#if product.unit}
+						<span class="text-xs text-base-content/25">{product.unit}</span>
+					{/if}
+				</div>
+				<div class="flex items-start pt-3 pr-3">
+					<ActionDropdown>
+						{#snippet items()}
+							<li>
+								<form method="POST" action="?/enableProduct" use:enhance>
+									<input type="hidden" name="productId" value={product.id} />
+									<button type="submit" class="text-success">Enable</button>
+								</form>
+							</li>
+							{#if !product.inUse}
+								<li>
+									<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+								</li>
+							{/if}
+						{/snippet}
+					</ActionDropdown>
+				</div>
+			</div>
+		{/each}
+	{/if}
 </div>
 
 <div class="fab">

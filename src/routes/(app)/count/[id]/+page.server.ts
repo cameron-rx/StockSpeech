@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		locals.supabase
 			.from('products')
 			.select('id, name, unit')
+			.eq('active', true)
 			.order('name')
 	]);
 

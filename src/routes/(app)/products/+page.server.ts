@@ -16,13 +16,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { user } = await locals.safeGetSession();
 	if (!user) return { products: [] };
 
-	const { data: products } = await locals.supabase
+	const { data: productRows } = await locals.supabase
 		.from('products')
-		.select('id, name, unit')
+		.select('id, name, unit, active, count_items!product_id(id)')
 		.eq('user_id', user.id)
 		.order('display_order');
 
-	return { products: products ?? [] };
+	const products = (productRows ?? []).map((p) => ({
+		id: p.id,
+		name: p.name,
+		unit: p.unit,
+		active: p.active,
+		inUse: Array.isArray(p.count_items) && p.count_items.length > 0
+	}));
+
+	return { products };
 };
 
 export const actions: Actions = {
@@ -108,7 +116,39 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const productId = formData.get('productId') as string;
 
+		const { data: refs } = await locals.supabase
+			.from('count_items')
+			.select('id')
+			.eq('product_id', productId)
+			.limit(1);
+
+		if (refs && refs.length > 0) return fail(400, { error: 'Product is in use and cannot be deleted.' });
+
 		const { error } = await locals.supabase.from('products').delete().eq('id', productId);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	disableProduct: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const productId = formData.get('productId') as string;
+
+		const { error } = await locals.supabase
+			.from('products')
+			.update({ active: false })
+			.eq('id', productId);
+
+		if (error) return fail(500, { error: error.message });
+	},
+
+	enableProduct: async ({ locals, request }) => {
+		const formData = await request.formData();
+		const productId = formData.get('productId') as string;
+
+		const { error } = await locals.supabase
+			.from('products')
+			.update({ active: true })
+			.eq('id', productId);
 
 		if (error) return fail(500, { error: error.message });
 	},
