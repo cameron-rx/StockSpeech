@@ -163,7 +163,7 @@
 			bind:value={totalsSearch}
 		/>
 		{#each filteredTotals as row (row.name)}
-			<CountItemRow name={row.name} quantity={row.total} unit={row.unit} />
+			<CountItemRow name={row.name} quantity={row.total} unit={row.unit} copyable />
 		{:else}
 			<p class="text-base-content/60 text-sm">No matching products.</p>
 		{/each}
