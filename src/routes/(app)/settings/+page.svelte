@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 	let { data, form } = $props();
 
 	let fullName = $state(data.fullName);
 </script>
+
+<Breadcrumbs crumbs={[{ label: 'Settings' }]} />
 
 <div class="mx-4 my-4 flex flex-col gap-6">
 	<div class="flex flex-col gap-3">

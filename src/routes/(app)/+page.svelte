@@ -2,6 +2,7 @@
 	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 	import EditCountModal from '$lib/components/EditCountModal.svelte';
@@ -29,6 +30,8 @@
 		editCountDialog?.showModal();
 	}
 </script>
+
+<Breadcrumbs crumbs={[{ label: 'Counts' }]} />
 
 <div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
 	{#each data.counts as count (count.id)}

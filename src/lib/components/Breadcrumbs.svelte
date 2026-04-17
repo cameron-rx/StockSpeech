@@ -11,7 +11,7 @@
 	let { crumbs }: Props = $props();
 </script>
 
-<div class="breadcrumbs px-4 pt-4 text-sm">
+<div class="sticky top-0 z-10 breadcrumbs bg-base-100 px-4 pt-4 pb-2 text-sm">
 	<ul>
 		{#each crumbs as crumb (crumb.label)}
 			<li>

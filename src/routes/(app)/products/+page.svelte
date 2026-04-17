@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PlusIcon, FileIcon, PencilSimpleIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 
@@ -57,6 +58,8 @@
 		}
 	}
 </script>
+
+<Breadcrumbs crumbs={[{ label: 'Products' }]} />
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<input
