@@ -43,7 +43,7 @@
 					<p class="text-sm text-success">Profile updated.</p>
 				{/if}
 
-				<button type="submit" class="btn btn-primary btn-sm self-end">Save</button>
+				<button type="submit" class="btn self-end btn-sm btn-primary">Save</button>
 			</form>
 		</div>
 	</div>
@@ -57,7 +57,7 @@
 					<span class="text-xs text-base-content/50">Sign out of your account</span>
 				</div>
 				<form method="POST" action="?/logout" use:enhance>
-					<button type="submit" class="btn btn-error btn-sm btn-outline">Log out</button>
+					<button type="submit" class="btn btn-outline btn-sm btn-error">Log out</button>
 				</form>
 			</div>
 		</div>

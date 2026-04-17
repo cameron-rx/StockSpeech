@@ -1,8 +1,6 @@
 import OpenAI from 'openai';
-
-export type ParsedItem = { itemName: string; count: number; confidence: number };
-
-export type ParseTranscriptFn = (transcript: string, products: string[]) => Promise<ParsedItem[]>;
+import type { ParsedItem, ParseTranscriptFn } from './types';
+import { getSystemPrompt } from './prompt';
 
 export function createGroqParser(apiKey: string, model = 'openai/gpt-oss-20b'): ParseTranscriptFn {
 	const openai = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' });
@@ -10,18 +8,7 @@ export function createGroqParser(apiKey: string, model = 'openai/gpt-oss-20b'): 
 	return async (transcript, products) => {
 		const response = await openai.responses.create({
 			model,
-			instructions: `You are a stock counting assistant in a cocktail bar. Extract items and quantities from a voice transcript that has been automatically transcribed and may contain errors.
-Only include items that match the product list. Count can be a decimal or integer value. Confidence is measured in a range from 0-1. Return JSON: { "items": [{ "itemName": string, "count": number, "confidence": number }] }
-
-When interpreting quantities, account for common speech-to-text mistranscriptions:
-- Homophones for numbers: "to" or "too" used as a quantity means 2; "for" used as a quantity means 4; "won" means 1; "ate" means 8
-- Written-out numbers: convert "one", "two", "three" etc. to digits
-- Fractions: "half" or "a half" = 0.5; "quarter" = 0.25; "and a half" adds 0.5 (e.g. "two and a half" = 2.5)
-- "dozen" = 12
-- When a word that is normally a preposition ("to", "for") appears directly before a product name, treat it as the number equivalent
-
-#Product List
-${products.join(', ')}`,
+			instructions: getSystemPrompt(products),
 			input: `Transcript: "${transcript}"`,
 			text: { format: { type: 'json_object' } }
 		});

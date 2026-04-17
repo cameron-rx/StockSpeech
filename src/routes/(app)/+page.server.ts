@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getString, getRequiredString } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -23,14 +24,14 @@ export const actions: Actions = {
 		const { user } = await locals.safeGetSession();
 		if (!user) return fail(401, { error: 'Not authenticated' });
 		const formData = await request.formData();
-		const name = formData.get('name') as string;
+		const name = getRequiredString(formData, 'name');
 
-		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+		if (!name) return fail(400, { error: 'Name is required' });
 
 		const { data, error } = await locals.supabase
 			.from('stock_counts')
 			.insert({
-				name: name.trim(),
+				name,
 				user_id: user.id
 			})
 			.select('id')
@@ -43,7 +44,8 @@ export const actions: Actions = {
 
 	deleteCount: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const countId = formData.get('countId') as string;
+		const countId = getString(formData, 'countId');
+		if (!countId) return fail(400, { error: 'Count ID is required' });
 
 		const { error } = await locals.supabase.from('stock_counts').delete().eq('id', countId);
 
@@ -52,15 +54,13 @@ export const actions: Actions = {
 
 	editCount: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const countId = formData.get('countId') as string;
-		const name = formData.get('name') as string;
+		const countId = getString(formData, 'countId');
+		const name = getRequiredString(formData, 'name');
 
-		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+		if (!countId) return fail(400, { error: 'Count ID is required' });
+		if (!name) return fail(400, { error: 'Name is required' });
 
-		const { error } = await locals.supabase
-			.from('stock_counts')
-			.update({ name: name.trim() })
-			.eq('id', countId);
+		const { error } = await locals.supabase.from('stock_counts').update({ name }).eq('id', countId);
 
 		if (error) return fail(500, { error: error.message });
 	}

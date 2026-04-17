@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getRequiredString } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -23,7 +24,7 @@ export const actions: Actions = {
 		if (!user) return fail(401, { error: 'Not authenticated' });
 
 		const formData = await request.formData();
-		const fullName = (formData.get('fullName') as string)?.trim();
+		const fullName = getRequiredString(formData, 'fullName');
 
 		if (!fullName) return fail(400, { error: 'Name is required' });
 

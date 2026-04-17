@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import EditCountModal from '$lib/components/EditCountModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
 	import CountCard from '$lib/components/CountCard.svelte';
 
@@ -95,40 +96,8 @@
 	{/snippet}
 </ConfirmDeleteModal>
 
-<dialog bind:this={editCountDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="mb-4 text-lg font-bold">Edit Count</h3>
-		<form
-			method="POST"
-			action="?/editCount"
-			use:enhance={() =>
-				async ({ update }) => {
-					editCountDialog?.close();
-					await update();
-				}}
-			class="flex flex-col gap-4"
-		>
-			<input type="hidden" name="countId" value={selectedCount?.id} />
-			<label class="floating-label">
-				<input
-					class="input w-full"
-					type="text"
-					name="name"
-					placeholder="Count name"
-					bind:value={editName}
-					required
-				/>
-				<span>Name</span>
-			</label>
-			<div class="modal-action mt-0">
-				<button type="button" class="btn btn-ghost" onclick={() => editCountDialog?.close()}>
-					Cancel
-				</button>
-				<button type="submit" class="btn btn-primary">Save</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<EditCountModal bind:dialog={editCountDialog} bind:name={editName} action="?/editCount">
+	{#snippet hiddenInputs()}
+		<input type="hidden" name="countId" value={selectedCount?.id} />
+	{/snippet}
+</EditCountModal>

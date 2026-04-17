@@ -1,14 +1,13 @@
 <script lang="ts">
 	import '../app.css';
-	import { page } from '$app/state';
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import { pwaAssetsHead } from 'virtual:pwa-assets/head';
-	import DockNav from '$lib/components/DockNav.svelte';
 
 	let { data, children } = $props();
 
+	// PWA registration (no cleanup needed)
 	onMount(async () => {
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register');
@@ -16,14 +15,15 @@
 		}
 	});
 
+	// Supabase auth listener (cleanup returned synchronously)
 	onMount(() => {
-		const { data: { subscription } } = data.supabase.auth.onAuthStateChange(
-			(event, session) => {
-				if (session?.expires_at !== data.session?.expires_at) {
-					invalidate('supabase:auth');
-				}
+		const {
+			data: { subscription }
+		} = data.supabase.auth.onAuthStateChange((event, session) => {
+			if (session?.expires_at !== data.session?.expires_at) {
+				invalidate('supabase:auth');
 			}
-		);
+		});
 
 		return () => subscription.unsubscribe();
 	});
@@ -42,15 +42,7 @@
 </svelte:head>
 
 <div class="safe-layout flex h-screen flex-col">
-	<main
-		class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain"
-		class:main-content={page.url.pathname !== '/login' && !page.url.pathname.endsWith('/record')}
-		class:main-content-no-nav={page.url.pathname === '/login' || page.url.pathname.endsWith('/record')}
-	>
+	<main class="relative flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
 		{@render children()}
 	</main>
-
-	{#if page.url.pathname !== '/login' && !page.url.pathname.endsWith('/record')}
-		<DockNav />
-	{/if}
 </div>

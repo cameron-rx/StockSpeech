@@ -1,6 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import OpenAI from 'openai';
 import { OPEN_AI_API_KEY } from '$env/static/private';
+import { getEnv } from '$lib/server/env';
+import { getString, getRequiredString } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 type ImportedProduct = {
@@ -39,14 +41,14 @@ export const actions: Actions = {
 		if (!user) return fail(401, { error: 'Not authenticated' });
 
 		const formData = await request.formData();
-		const name = formData.get('name') as string;
-		const unit = (formData.get('unit') as string) || null;
+		const name = getRequiredString(formData, 'name');
+		const unit = getString(formData, 'unit') || null;
 
-		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+		if (!name) return fail(400, { error: 'Name is required' });
 
 		const { error } = await locals.supabase
 			.from('products')
-			.insert({ name: name.trim(), unit, user_id: user.id });
+			.insert({ name, unit, user_id: user.id });
 
 		if (error) return fail(500, { error: error.message });
 	},
@@ -71,8 +73,7 @@ export const actions: Actions = {
 		const base64 = btoa(binary);
 		const dataUrl = `data:${file.type};base64,${base64}`;
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const apiKey = (platform?.env as any)?.OPENAI_API_KEY ?? OPEN_AI_API_KEY;
+		const apiKey = getEnv(platform, 'OPEN_AI_API_KEY', OPEN_AI_API_KEY);
 		const client = new OpenAI({ apiKey });
 		const systemPrompt = `You are a stock management assistant. Extract a product list from the provided file.
 		Return ONLY valid JSON in this exact format, no markdown, no explanation:
@@ -114,7 +115,8 @@ export const actions: Actions = {
 
 	deleteProduct: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const productId = formData.get('productId') as string;
+		const productId = getString(formData, 'productId');
+		if (!productId) return fail(400, { error: 'Product ID is required' });
 
 		const { data: refs } = await locals.supabase
 			.from('count_items')
@@ -122,7 +124,8 @@ export const actions: Actions = {
 			.eq('product_id', productId)
 			.limit(1);
 
-		if (refs && refs.length > 0) return fail(400, { error: 'Product is in use and cannot be deleted.' });
+		if (refs && refs.length > 0)
+			return fail(400, { error: 'Product is in use and cannot be deleted.' });
 
 		const { error } = await locals.supabase.from('products').delete().eq('id', productId);
 
@@ -131,7 +134,8 @@ export const actions: Actions = {
 
 	disableProduct: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const productId = formData.get('productId') as string;
+		const productId = getString(formData, 'productId');
+		if (!productId) return fail(400, { error: 'Product ID is required' });
 
 		const { error } = await locals.supabase
 			.from('products')
@@ -143,7 +147,8 @@ export const actions: Actions = {
 
 	enableProduct: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const productId = formData.get('productId') as string;
+		const productId = getString(formData, 'productId');
+		if (!productId) return fail(400, { error: 'Product ID is required' });
 
 		const { error } = await locals.supabase
 			.from('products')
@@ -155,15 +160,16 @@ export const actions: Actions = {
 
 	editProduct: async ({ locals, request }) => {
 		const formData = await request.formData();
-		const productId = formData.get('productId') as string;
-		const name = formData.get('name') as string;
-		const unit = (formData.get('unit') as string) || null;
+		const productId = getString(formData, 'productId');
+		const name = getRequiredString(formData, 'name');
+		const unit = getString(formData, 'unit') || null;
 
-		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+		if (!productId) return fail(400, { error: 'Product ID is required' });
+		if (!name) return fail(400, { error: 'Name is required' });
 
 		const { error } = await locals.supabase
 			.from('products')
-			.update({ name: name.trim(), unit })
+			.update({ name, unit })
 			.eq('id', productId);
 
 		if (error) return fail(500, { error: error.message });

@@ -33,13 +33,9 @@
 		editProductDialog?.showModal();
 	}
 
-	const activeProducts = $derived(
-		data.products.filter((p) => p.active)
-	);
+	const activeProducts = $derived(data.products.filter((p) => p.active));
 
-	const disabledProducts = $derived(
-		data.products.filter((p) => !p.active)
-	);
+	const disabledProducts = $derived(data.products.filter((p) => !p.active));
 
 	const filteredActive = $derived(
 		productsSearch.trim()
@@ -91,7 +87,8 @@
 							</li>
 						{:else}
 							<li>
-								<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+								<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button
+								>
 							</li>
 						{/if}
 					{/snippet}
@@ -100,12 +97,16 @@
 		</div>
 	{:else}
 		<p class="text-base-content/60 text-sm">
-			{productsSearch.trim() ? 'No matching products.' : 'No products yet. Add one with the + button.'}
+			{productsSearch.trim()
+				? 'No matching products.'
+				: 'No products yet. Add one with the + button.'}
 		</p>
 	{/each}
 
 	{#if filteredDisabled.length > 0}
-		<p class="mt-2 text-xs font-semibold tracking-widest text-base-content/40 uppercase">Disabled</p>
+		<p class="mt-2 text-xs font-semibold tracking-widest text-base-content/40 uppercase">
+			Disabled
+		</p>
 		{#each filteredDisabled as product (product.id)}
 			<div class="flex rounded-xl border border-base-content/10">
 				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
@@ -125,7 +126,9 @@
 							</li>
 							{#if !product.inUse}
 								<li>
-									<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+									<button class="text-error" onclick={() => openDeleteProduct(product)}
+										>Delete</button
+									>
 								</li>
 							{/if}
 						{/snippet}
@@ -173,7 +176,9 @@
 			{/if}
 
 			<div class="modal-action">
-				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}>Cancel</button>
+				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}
+					>Cancel</button
+				>
 				<button type="submit" class="btn btn-primary">Add</button>
 			</div>
 		</form>
@@ -217,7 +222,9 @@
 				{/if}
 
 				<div class="modal-action">
-					<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}>Cancel</button>
+					<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}
+						>Cancel</button
+					>
 					<button type="submit" class="btn btn-primary">Upload</button>
 				</div>
 			</form>

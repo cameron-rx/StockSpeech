@@ -3,7 +3,7 @@
 /// <reference types="vite-plugin-pwa/client" />
 /// <reference types="vite-plugin-pwa/pwa-assets" />
 
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from '@supabase/supabase-js';
 
 // for information about these interfaces
 declare global {
@@ -27,6 +27,5 @@ declare global {
 		// interface PageState {}
 	}
 }
-
 
 export {};
