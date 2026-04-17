@@ -57,7 +57,7 @@
 				if (!acc[id]) {
 					acc[id] = { name: product?.name ?? 'Unknown', unit: product?.unit, total: 0 };
 				}
-				acc[id].total += item.quantity ?? 0;
+				acc[id].total = Math.round((acc[id].total + (item.quantity ?? 0)) * 1e4) / 1e4;
 				return acc;
 			}, {})
 		).sort((a, b) => a.name.localeCompare(b.name))
