@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getString, getRequiredString, getNumber } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -12,11 +13,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.from('count_items')
 			.select('id, quantity, confidence, product:products!product_id(id, name, unit)')
 			.eq('stock_count_id', params.id),
-		locals.supabase
-			.from('products')
-			.select('id, name, unit')
-			.eq('active', true)
-			.order('name')
+		locals.supabase.from('products').select('id, name, unit').eq('active', true).order('name')
 	]);
 
 	if (!count) redirect(303, '/');
@@ -30,10 +27,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
 	delete: async ({ locals, params }) => {
-		const { error } = await locals.supabase
-			.from('stock_counts')
-			.delete()
-			.eq('id', params.id);
+		const { error } = await locals.supabase.from('stock_counts').delete().eq('id', params.id);
 
 		if (error) return fail(500, { error: error.message });
 
@@ -51,7 +45,8 @@ export const actions: Actions = {
 
 	deleteItem: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const itemId = formData.get('itemId') as string;
+		const itemId = getString(formData, 'itemId');
+		if (!itemId) return fail(400, { error: 'Item ID is required' });
 
 		const { error } = await locals.supabase.from('count_items').delete().eq('id', itemId);
 
@@ -60,13 +55,13 @@ export const actions: Actions = {
 
 	editCount: async ({ locals, params, request }) => {
 		const formData = await request.formData();
-		const name = formData.get('name') as string;
+		const name = getRequiredString(formData, 'name');
 
-		if (!name?.trim()) return fail(400, { error: 'Name is required' });
+		if (!name) return fail(400, { error: 'Name is required' });
 
 		const { error } = await locals.supabase
 			.from('stock_counts')
-			.update({ name: name.trim() })
+			.update({ name })
 			.eq('id', params.id);
 
 		if (error) return fail(500, { error: error.message });
@@ -74,9 +69,11 @@ export const actions: Actions = {
 
 	editItem: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const itemId = formData.get('itemId') as string;
-		const productId = formData.get('productId') as string;
-		const quantity = Number(formData.get('quantity'));
+		const itemId = getString(formData, 'itemId');
+		const productId = getString(formData, 'productId');
+		const quantity = getNumber(formData, 'quantity');
+
+		if (!itemId || !productId || quantity == null) return fail(400, { error: 'Missing fields' });
 
 		const { error } = await locals.supabase
 			.from('count_items')

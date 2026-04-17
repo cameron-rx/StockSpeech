@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import { createOpenAIParser } from './openaiProvider';
 import { createGeminiParser } from './geminiProvider';
 import { createGroqParser } from './groqProvider';
-import type { ParsedItem } from './openaiProvider';
+import type { ParsedItem } from './types';
 
 //const OPEN_AI_API_KEY = process.env.OPEN_AI_API_KEY ?? '';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';

@@ -2,8 +2,10 @@
 	import { PlusIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import EditCountModal from '$lib/components/EditCountModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
 	import CountCard from '$lib/components/CountCard.svelte';
 
@@ -29,6 +31,14 @@
 	}
 </script>
 
+<Breadcrumbs crumbs={[{ label: 'Counts' }]}>
+	{#snippet actions()}
+		<FAB onclick={() => createDialog?.showModal()}>
+			<PlusIcon weight="bold" />
+		</FAB>
+	{/snippet}
+</Breadcrumbs>
+
 <div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
 	{#each data.counts as count (count.id)}
 		<CountCard
@@ -52,10 +62,6 @@
 		<p class="text-base-content/60 text-sm">No counts yet. Start one with the + button.</p>
 	{/each}
 </div>
-
-<FAB bottom="24" onclick={() => createDialog?.showModal()}>
-	<PlusIcon weight="bold" />
-</FAB>
 
 <dialog bind:this={createDialog} class="modal">
 	<div class="modal-box">
@@ -95,40 +101,8 @@
 	{/snippet}
 </ConfirmDeleteModal>
 
-<dialog bind:this={editCountDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="mb-4 text-lg font-bold">Edit Count</h3>
-		<form
-			method="POST"
-			action="?/editCount"
-			use:enhance={() =>
-				async ({ update }) => {
-					editCountDialog?.close();
-					await update();
-				}}
-			class="flex flex-col gap-4"
-		>
-			<input type="hidden" name="countId" value={selectedCount?.id} />
-			<label class="floating-label">
-				<input
-					class="input w-full"
-					type="text"
-					name="name"
-					placeholder="Count name"
-					bind:value={editName}
-					required
-				/>
-				<span>Name</span>
-			</label>
-			<div class="modal-action mt-0">
-				<button type="button" class="btn btn-ghost" onclick={() => editCountDialog?.close()}>
-					Cancel
-				</button>
-				<button type="submit" class="btn btn-primary">Save</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<EditCountModal bind:dialog={editCountDialog} bind:name={editName} action="?/editCount">
+	{#snippet hiddenInputs()}
+		<input type="hidden" name="countId" value={selectedCount?.id} />
+	{/snippet}
+</EditCountModal>

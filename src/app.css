@@ -22,10 +22,6 @@ html {
 	padding-bottom: env(safe-area-inset-bottom);
 }
 
-.fab {
-	bottom: calc(6rem + env(safe-area-inset-bottom));
-}
-
 /* ============================================================
    StockSpeech — App UI Theme
    Cool-toned base · near-black · bone white · ember accent

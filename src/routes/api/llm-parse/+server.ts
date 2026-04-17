@@ -1,8 +1,9 @@
 import { GROQ_API_KEY } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { StockItem } from '$lib/services/llm/types';
-import { createGroqParser, type ParseTranscriptFn } from '$lib/services/llm/groqProvider';
+import { getEnv } from '$lib/server/env';
+import { createGroqParser } from '$lib/services/llm/groqProvider';
+import type { ParseTranscriptFn } from '$lib/services/llm/types';
 
 type Product = { id: string; name: string };
 
@@ -13,8 +14,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		products: Product[];
 	};
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const apiKey = (platform?.env as any)?.GROQ_API_KEY ?? GROQ_API_KEY;
+	const apiKey = getEnv(platform, 'GROQ_API_KEY', GROQ_API_KEY);
 	const parseTranscript: ParseTranscriptFn = createGroqParser(apiKey, 'llama-3.3-70b-versatile');
 
 	const llmItems = await parseTranscript(
@@ -27,12 +27,12 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			const product = products.find((p) => p.name.toLowerCase() === item.itemName.toLowerCase());
 			return product
 				? {
-					stock_count_id: stockCountId,
-					product_id: product.id,
-					quantity: item.count,
-					confidence: item.confidence,
-					raw_transcription: transcript
-				}
+						stock_count_id: stockCountId,
+						product_id: product.id,
+						quantity: item.count,
+						confidence: item.confidence,
+						raw_transcription: transcript
+					}
 				: null;
 		})
 		.filter((item): item is NonNullable<typeof item> => item !== null);
@@ -42,12 +42,5 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		if (error) console.error('[llm-parse] insert error:', error);
 	}
 
-	const stockItems: StockItem[] = llmItems
-		.filter((item) => products.some((p) => p.name.toLowerCase() === item.itemName.toLowerCase()))
-		.map((item) => {
-			const product = products.find((p) => p.name.toLowerCase() === item.itemName.toLowerCase())!;
-			return { ...item, id: product.id, rawTranscript: transcript };
-		});
-
-	return json(stockItems);
+	return new Response(null, { status: 204 });
 };

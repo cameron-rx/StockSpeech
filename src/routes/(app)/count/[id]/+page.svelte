@@ -5,7 +5,10 @@
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import CountCard from '$lib/components/CountCard.svelte';
+	import CountItemRow from '$lib/components/CountItemRow.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
+	import EditCountModal from '$lib/components/EditCountModal.svelte';
+	import EditItemModal from '$lib/components/EditItemModal.svelte';
 	import FAB from '$lib/components/FAB.svelte';
 
 	let { data } = $props();
@@ -36,6 +39,14 @@
 		deleteItemDialog?.showModal();
 	}
 
+	function openEditItem(item: Item) {
+		selectedItem = item;
+		const p = getProduct(item);
+		editProductId = (p as { id?: string } | null)?.id ?? '';
+		editQuantity = item.quantity ?? null;
+		editItemDialog?.showModal();
+	}
+
 	const totals = $derived(
 		Object.values(
 			data.items.reduce<
@@ -46,7 +57,7 @@
 				if (!acc[id]) {
 					acc[id] = { name: product?.name ?? 'Unknown', unit: product?.unit, total: 0 };
 				}
-				acc[id].total += item.quantity ?? 0;
+				acc[id].total = Math.round((acc[id].total + (item.quantity ?? 0)) * 1e4) / 1e4;
 				return acc;
 			}, {})
 		).sort((a, b) => a.name.localeCompare(b.name))
@@ -57,31 +68,20 @@
 			? totals.filter((r) => r.name.toLowerCase().includes(totalsSearch.toLowerCase()))
 			: totals
 	);
-
-	function confidenceClass(score: number | null | undefined): string {
-		if (score == null) return 'bg-base-300';
-		if (score >= 0.9) return 'bg-success';
-		if (score >= 0.5) return 'bg-warning';
-		return 'bg-error';
-	}
-
-	function openEditItem(item: Item) {
-		selectedItem = item;
-		const p = getProduct(item);
-		editProductId = (p as { id?: string } | null)?.id ?? '';
-		editQuantity = item.quantity ?? null;
-		editItemDialog?.showModal();
-	}
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]} />
+<Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]}>
+	{#snippet actions()}
+		{#if !completed}
+			<FAB href={resolve(`/count/${data.count.id}/record`)}>
+				<MicrophoneIcon weight="bold" />
+			</FAB>
+		{/if}
+	{/snippet}
+</Breadcrumbs>
 
 <div class="mx-4 my-4 flex flex-col gap-4">
-	<CountCard
-		name={data.count.name}
-		completed={completed}
-		date={data.count.date}
-	>
+	<CountCard name={data.count.name} {completed} date={data.count.date}>
 		{#snippet actions()}
 			<ActionDropdown width="w-36">
 				{#snippet items()}
@@ -97,7 +97,9 @@
 					</li>
 					{#if !completed}
 						<li>
-							<button class="text-success" onclick={() => completeDialog?.showModal()}>Mark Complete</button>
+							<button class="text-success" onclick={() => completeDialog?.showModal()}
+								>Mark Complete</button
+							>
 						</li>
 					{/if}
 					<li>
@@ -131,18 +133,13 @@
 	{#if activeTab === 'items'}
 		{#each data.items as item (item.id)}
 			{@const product = getProduct(item)}
-			<div class="flex rounded-xl border border-base-content/10">
-				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
-				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
-					<div class="flex items-center justify-between gap-2">
-						<span class="font-medium">{product?.name ?? 'Unknown'}</span>
-						<span class="badge badge-neutral min-w-12 justify-center">{item.quantity ?? '—'}</span>
-					</div>
-					{#if product?.unit}
-						<span class="text-xs text-base-content/60">{product.unit}</span>
-					{/if}
-				</div>
-				<div class="flex items-start pt-3 pr-3">
+			<CountItemRow
+				name={product?.name ?? 'Unknown'}
+				quantity={item.quantity}
+				unit={product?.unit}
+				confidence={item.confidence}
+			>
+				{#snippet actions()}
 					<ActionDropdown>
 						{#snippet items()}
 							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
@@ -151,8 +148,8 @@
 							</li>
 						{/snippet}
 					</ActionDropdown>
-				</div>
-			</div>
+				{/snippet}
+			</CountItemRow>
 		{:else}
 			<p class="text-base-content/60 text-sm">No items recorded yet.</p>
 		{/each}
@@ -166,65 +163,14 @@
 			bind:value={totalsSearch}
 		/>
 		{#each filteredTotals as row (row.name)}
-			<div class="flex rounded-xl border border-base-content/10">
-				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
-					<div class="flex items-center justify-between gap-2">
-						<span class="font-medium">{row.name}</span>
-						<span class="badge badge-neutral min-w-12 justify-center">{row.total}</span>
-					</div>
-					{#if row.unit}
-						<span class="text-xs text-base-content/60">{row.unit}</span>
-					{/if}
-				</div>
-			</div>
+			<CountItemRow name={row.name} quantity={row.total} unit={row.unit} copyable />
 		{:else}
 			<p class="text-base-content/60 text-sm">No matching products.</p>
 		{/each}
 	{/if}
 </div>
 
-{#if !completed}
-	<FAB href={resolve(`/count/${data.count.id}/record`)}>
-		<MicrophoneIcon weight="bold" />
-	</FAB>
-{/if}
-
-<dialog bind:this={editCountDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="mb-4 text-lg font-bold">Edit Count</h3>
-		<form
-			method="POST"
-			action="?/editCount"
-			use:enhance={() =>
-				async ({ update }) => {
-					editCountDialog?.close();
-					await update();
-				}}
-			class="flex flex-col gap-4"
-		>
-			<label class="floating-label">
-				<input
-					class="input w-full"
-					type="text"
-					name="name"
-					placeholder="Count name"
-					bind:value={editCountName}
-					required
-				/>
-				<span>Name</span>
-			</label>
-			<div class="modal-action mt-0">
-				<button type="button" class="btn btn-ghost" onclick={() => editCountDialog?.close()}>
-					Cancel
-				</button>
-				<button type="submit" class="btn btn-primary">Save</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<EditCountModal bind:dialog={editCountDialog} bind:name={editCountName} action="?/editCount" />
 
 <dialog bind:this={completeDialog} class="modal">
 	<div class="modal-box">
@@ -270,48 +216,11 @@
 	{/snippet}
 </ConfirmDeleteModal>
 
-<dialog bind:this={editItemDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Edit item</h3>
-		<form
-			method="POST"
-			action="?/editItem"
-			use:enhance={() =>
-				async ({ update }) => {
-					editItemDialog?.close();
-					await update();
-				}}
-			class="flex flex-col gap-4 pt-4"
-		>
-			<input type="hidden" name="itemId" value={selectedItem?.id} />
-			<label class="flex flex-col gap-1">
-				<span class="text-sm font-medium">Product</span>
-				<select name="productId" class="select-bordered select w-full" bind:value={editProductId}>
-					{#each data.products as p (p.id)}
-						<option value={p.id}>{p.name}{p.unit ? ` (${p.unit})` : ''}</option>
-					{/each}
-				</select>
-			</label>
-			<label class="flex flex-col gap-1">
-				<span class="text-sm font-medium">Quantity</span>
-				<input
-					type="number"
-					name="quantity"
-					class="input-bordered input w-full"
-					bind:value={editQuantity}
-					min="0"
-					step="any"
-				/>
-			</label>
-			<div class="modal-action mt-0">
-				<button type="button" class="btn btn-ghost" onclick={() => editItemDialog?.close()}>
-					Cancel
-				</button>
-				<button type="submit" class="btn btn-primary">Save</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+<EditItemModal
+	bind:dialog={editItemDialog}
+	action="?/editItem"
+	itemId={selectedItem?.id}
+	bind:productId={editProductId}
+	bind:quantity={editQuantity}
+	products={data.products}
+/>

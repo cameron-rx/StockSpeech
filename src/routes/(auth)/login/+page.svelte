@@ -5,7 +5,7 @@
 </script>
 
 <div class="flex h-full flex-col items-center justify-center gap-8">
-	<h1 class="text-5xl font-bold">StockSpeech</h1>
+	<h1 class="text-5xl font-bold">Stock<span class="text-accent">Speech</span></h1>
 	<form class="flex w-full max-w-sm flex-col items-center gap-8 px-6" method="POST" use:enhance>
 		<div class="w-full">
 			<div class="flex flex-col gap-1">

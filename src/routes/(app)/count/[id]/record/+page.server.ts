@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { getString, getNumber } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -29,16 +30,19 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	deleteItem: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const itemId = formData.get('itemId') as string;
+		const itemId = getString(formData, 'itemId');
+		if (!itemId) return fail(400, { error: 'Item ID is required' });
 		const { error } = await locals.supabase.from('count_items').delete().eq('id', itemId);
 		if (error) return fail(500, { error: error.message });
 	},
 
 	editItem: async ({ request, locals }) => {
 		const formData = await request.formData();
-		const itemId = formData.get('itemId') as string;
-		const productId = formData.get('productId') as string;
-		const quantity = Number(formData.get('quantity'));
+		const itemId = getString(formData, 'itemId');
+		const productId = getString(formData, 'productId');
+		const quantity = getNumber(formData, 'quantity');
+
+		if (!itemId || !productId || quantity == null) return fail(400, { error: 'Missing fields' });
 		const { error } = await locals.supabase
 			.from('count_items')
 			.update({ product_id: productId, quantity })
@@ -48,8 +52,10 @@ export const actions: Actions = {
 
 	addItem: async ({ request, locals, params }) => {
 		const formData = await request.formData();
-		const productName = formData.get('productId') as string;
-		const quantity = Number(formData.get('quantity'));
+		const productName = getString(formData, 'productId');
+		const quantity = getNumber(formData, 'quantity');
+
+		if (!productName || quantity == null) return fail(400, { error: 'Missing fields' });
 
 		const { data: product } = await locals.supabase
 			.from('products')

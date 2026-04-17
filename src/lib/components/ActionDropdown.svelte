@@ -11,11 +11,11 @@
 </script>
 
 <div class="dropdown dropdown-end">
-	<button tabindex="0" class="btn btn-ghost btn-sm btn-square">
+	<button tabindex="0" class="btn btn-square btn-ghost btn-sm">
 		<DotsThreeVerticalIcon weight="bold" size={20} />
 	</button>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-10 {width} p-1 shadow">
+	<ul tabindex="0" class="dropdown-content menu z-10 rounded-box bg-base-100 {width} p-1 shadow">
 		{@render items()}
 	</ul>
 </div>

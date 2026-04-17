@@ -10,15 +10,14 @@
 
 	let { href, label, icon }: Props = $props();
 
-	let active = $derived(href === '/' ? page.url.pathname === '/' || page.url.pathname.startsWith('/count') : page.url.pathname.startsWith(href));
+	let active = $derived(
+		href === '/'
+			? page.url.pathname === '/' || page.url.pathname.startsWith('/count')
+			: page.url.pathname.startsWith(href)
+	);
 </script>
 
-<a
-	{href}
-	aria-label={label}
-	aria-current={active ? 'page' : undefined}
-	class:dock-active={active}
->
+<a {href} aria-label={label} aria-current={active ? 'page' : undefined} class:dock-active={active}>
 	{@render icon()}
 	<span class="dock-label">{label}</span>
 </a>

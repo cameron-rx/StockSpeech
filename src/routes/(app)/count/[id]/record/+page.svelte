@@ -1,20 +1,30 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import { MicrophoneIcon, StopIcon, ArrowCounterClockwiseIcon, PlusIcon } from 'phosphor-svelte';
+	import {
+		MicrophoneIcon,
+		StopIcon,
+		ArrowCounterClockwiseIcon,
+		PlusIcon,
+		XIcon
+	} from 'phosphor-svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { createBrowserClient } from '@supabase/ssr';
-	import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import type { StockItem } from '$lib/services/llm/types';
 	import { AssemblyAIService } from '$lib/services/transcription/assemblyaiService.js';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
-	import { XIcon } from 'phosphor-svelte';
+	import CountItemRow from '$lib/components/CountItemRow.svelte';
+	import EditItemModal from '$lib/components/EditItemModal.svelte';
 
 	let { data } = $props();
 	let transcription = $state('Start recording to log items...');
 	let isRecording = $state(false);
 	let savedItems = $state<StockItem[]>([]);
-	const browserSupabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+
+	// NOTE: If realtime subscriptions break, the supabase client from data.supabase
+	// may need to be replaced with a dedicated browser client:
+	//   import { createBrowserClient } from '@supabase/ssr';
+	//   import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
+	//   const browserSupabase = createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 	let deleteItemDialog = $state<HTMLDialogElement>();
 	let editItemDialog = $state<HTMLDialogElement>();
@@ -37,20 +47,13 @@
 		editItemDialog?.showModal();
 	}
 
-	function confidenceClass(score: number | null | undefined): string {
-		if (score == null) return 'bg-base-300';
-		if (score >= 0.9) return 'bg-success';
-		if (score >= 0.5) return 'bg-warning';
-		return 'bg-error';
-	}
-
 	let isFinalFlash = $state(false);
 	let flashTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	let transcriptionService = untrack(() => new AssemblyAIService(data.keywords));
 
 	onMount(() => {
-		const channel = browserSupabase
+		const channel = data.supabase
 			.channel(`count_items_${data.count.id}`)
 			.on(
 				'postgres_changes',
@@ -60,7 +63,15 @@
 					table: 'count_items',
 					filter: `stock_count_id=eq.${data.count.id}`
 				},
-				(payload) => {
+				(payload: {
+					new: {
+						id: string;
+						product_id: string;
+						quantity: number;
+						confidence?: number;
+						raw_transcription?: string;
+					};
+				}) => {
 					const product = data.products.find(
 						(p: { id: string; name: string }) => p.id === payload.new.product_id
 					);
@@ -78,7 +89,7 @@
 					}
 				}
 			)
-			.subscribe((status, err) => {
+			.subscribe((status: string, err: Error | undefined) => {
 				console.log('Realtime status:', status, err);
 			});
 
@@ -101,19 +112,27 @@
 	};
 
 	const startRecording = async () => {
-		isRecording = true;
-		await transcriptionService.start((transcript, isFinal) => {
-			if (isFinal && transcript !== '') {
-				transcription = transcript;
-				parseItem(transcript);
-				isFinalFlash = true;
-				if (flashTimeout) clearTimeout(flashTimeout);
-				flashTimeout = setTimeout(() => { isFinalFlash = false; }, 1000);
-			} else if (transcript !== '') {
-				transcription = transcript;
-			}
-		});
-		transcription = 'Listening for items...';
+		try {
+			isRecording = true;
+			await transcriptionService.start((transcript, isFinal) => {
+				if (isFinal && transcript !== '') {
+					transcription = transcript;
+					parseItem(transcript);
+					isFinalFlash = true;
+					if (flashTimeout) clearTimeout(flashTimeout);
+					flashTimeout = setTimeout(() => {
+						isFinalFlash = false;
+					}, 1000);
+				} else if (transcript !== '') {
+					transcription = transcript;
+				}
+			});
+			transcription = 'Listening for items...';
+		} catch (err) {
+			isRecording = false;
+			transcription = 'Failed to start recording. Please check microphone permissions.';
+			console.error('Recording error:', err);
+		}
 	};
 
 	const stopRecording = () => {
@@ -123,56 +142,60 @@
 	};
 </script>
 
-<div class="flex justify-end px-4 pt-4">
-	<a href={resolve(`/count/${data.count.id}`)} class="btn btn-ghost btn-circle">
-		<XIcon size={20} weight="bold" />
-	</a>
-</div>
+<div class="flex h-full flex-col">
+	<!-- Fixed header: close + transcription -->
+	<div class="shrink-0 px-4 pt-4 pb-2">
+		<div class="flex justify-end">
+			<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-ghost">
+				<XIcon size={20} weight="bold" />
+			</a>
+		</div>
 
-<div class="mx-4 my-4 flex flex-col gap-4 pb-32">
-	<div class="relative rounded-xl px-4 py-3">
-		<div
-			class="absolute inset-0 rounded-xl border-2 transition-colors {isRecording
-				? 'animate-pulse border-accent'
-				: 'border-accent/40'}"
-		></div>
-		{#if isFinalFlash}
-			<div class="absolute inset-0 animate-ping rounded-xl bg-success/30"></div>
-		{/if}
-		<p class="relative text-center text-lg text-base-content/60">
-			{transcription}
-		</p>
+		<div class="relative mt-2 rounded-xl px-4 py-3">
+			<div
+				class="absolute inset-0 rounded-xl border-2 transition-colors {isRecording
+					? 'animate-pulse border-accent'
+					: 'border-accent/40'}"
+			></div>
+			{#if isFinalFlash}
+				<div class="absolute inset-0 animate-ping rounded-xl bg-success/30"></div>
+			{/if}
+			<p class="relative text-center text-lg text-base-content/60">
+				{transcription}
+			</p>
+		</div>
 	</div>
 
-	<div class="flex flex-col gap-2">
-		{#each savedItems as item (item.id)}
-			<div class="flex rounded-xl border border-base-content/10">
-				<div class="w-1.5 shrink-0 rounded-l-xl {confidenceClass(item.confidence)}"></div>
-				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
-					<div class="flex items-center justify-between gap-2">
-						<span class="font-medium">{item.itemName}</span>
-						<span class="badge min-w-12 justify-center badge-neutral">{item.count}</span>
-					</div>
-				</div>
-				<div class="flex items-start pt-3 pr-3">
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-							</li>
-						{/snippet}
-					</ActionDropdown>
-				</div>
-			</div>
-		{/each}
+	<!-- Scrollable items feed -->
+	<div class="flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+		<div class="flex flex-col gap-2">
+			{#each savedItems as item (item.id)}
+				<CountItemRow name={item.itemName} quantity={item.count} confidence={item.confidence}>
+					{#snippet actions()}
+						<ActionDropdown>
+							{#snippet items()}
+								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+								<li>
+									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+								</li>
+							{/snippet}
+						</ActionDropdown>
+					{/snippet}
+				</CountItemRow>
+			{/each}
+		</div>
 	</div>
+
+	<!-- Fixed bottom spacer for the recording controls -->
+	<div class="h-28 shrink-0"></div>
 </div>
 
 <div
 	class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]"
 >
-	<div class="flex flex-row items-center gap-8 rounded-full bg-primary px-6 py-3 text-primary-content shadow-lg">
+	<div
+		class="flex flex-row items-center gap-8 rounded-full bg-primary px-6 py-3 text-primary-content shadow-lg"
+	>
 		<form
 			method="POST"
 			action="?/deleteItem"
@@ -200,7 +223,7 @@
 		{#if !isRecording}
 			<button
 				onclick={() => startRecording()}
-				class="btn btn-circle btn-accent btn-xl"
+				class="btn btn-circle btn-xl btn-accent"
 				aria-label="Toggle Recording"
 			>
 				<MicrophoneIcon color="white" weight="bold" />
@@ -208,7 +231,7 @@
 		{:else}
 			<button
 				onclick={() => stopRecording()}
-				class="btn btn-circle btn-error btn-xl"
+				class="btn btn-circle btn-xl btn-error"
 				aria-label="Toggle Recording"
 			>
 				<StopIcon color="white" weight="bold" />
@@ -252,55 +275,20 @@
 	<form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
 
-<dialog bind:this={editItemDialog} class="modal">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Edit item</h3>
-		<form
-			method="POST"
-			action="?/editItem"
-			use:enhance={() =>
-				async ({ update }) => {
-					const id = selectedItem?.id;
-					const name = data.products.find((p) => p.id === editProductId)?.name ?? '';
-					const qty = editQuantity ?? 0;
-					editItemDialog?.close();
-					savedItems = savedItems.map((i) =>
-						i.id === id ? { ...i, itemName: name, count: qty } : i
-					);
-					await update({ invalidateAll: false });
-				}}
-			class="flex flex-col gap-4 pt-4"
-		>
-			<input type="hidden" name="itemId" value={selectedItem?.id} />
-			<label class="flex flex-col gap-1">
-				<span class="text-sm font-medium">Product</span>
-				<select name="productId" class="select-bordered select w-full" bind:value={editProductId}>
-					{#each data.products as p (p.id)}
-						<option value={p.id}>{p.name}</option>
-					{/each}
-				</select>
-			</label>
-			<label class="flex flex-col gap-1">
-				<span class="text-sm font-medium">Quantity</span>
-				<input
-					type="number"
-					name="quantity"
-					class="input-bordered input w-full"
-					bind:value={editQuantity}
-					min="0"
-					step="any"
-				/>
-			</label>
-			<div class="modal-action mt-0">
-				<button type="button" class="btn btn-ghost" onclick={() => editItemDialog?.close()}>
-					Cancel
-				</button>
-				<button type="submit" class="btn btn-primary">Save</button>
-			</div>
-		</form>
-	</div>
-	<form method="dialog" class="modal-backdrop"><button>close</button></form>
-</dialog>
+<EditItemModal
+	bind:dialog={editItemDialog}
+	action="?/editItem"
+	itemId={selectedItem?.id}
+	bind:productId={editProductId}
+	bind:quantity={editQuantity}
+	products={data.products}
+	onsubmit={() => {
+		const id = selectedItem?.id;
+		const name = data.products.find((p) => p.id === editProductId)?.name ?? '';
+		const qty = editQuantity ?? 0;
+		savedItems = savedItems.map((i) => (i.id === id ? { ...i, itemName: name, count: qty } : i));
+	}}
+/>
 
 <dialog bind:this={addItemDialog} class="modal">
 	<div class="modal-box">

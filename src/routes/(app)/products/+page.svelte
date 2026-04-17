@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { PlusIcon, FileIcon, PencilSimpleIcon } from 'phosphor-svelte';
+	import { PlusIcon, FileIcon } from 'phosphor-svelte';
+	import FAB from '$lib/components/FAB.svelte';
 	import { enhance } from '$app/forms';
+	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
 	import ConfirmDeleteModal from '$lib/components/ConfirmDeleteModal.svelte';
 
@@ -33,13 +35,9 @@
 		editProductDialog?.showModal();
 	}
 
-	const activeProducts = $derived(
-		data.products.filter((p) => p.active)
-	);
+	const activeProducts = $derived(data.products.filter((p) => p.active));
 
-	const disabledProducts = $derived(
-		data.products.filter((p) => !p.active)
-	);
+	const disabledProducts = $derived(data.products.filter((p) => !p.active));
 
 	const filteredActive = $derived(
 		productsSearch.trim()
@@ -61,6 +59,17 @@
 		}
 	}
 </script>
+
+<Breadcrumbs crumbs={[{ label: 'Products' }]}>
+	{#snippet actions()}
+		<button class="btn btn-circle btn-md btn-accent" onclick={() => fileDialog?.showModal()}>
+			<FileIcon weight="bold" />
+		</button>
+		<FAB onclick={() => addDialog?.showModal()}>
+			<PlusIcon weight="bold" />
+		</FAB>
+	{/snippet}
+</Breadcrumbs>
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<input
@@ -91,7 +100,8 @@
 							</li>
 						{:else}
 							<li>
-								<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+								<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button
+								>
 							</li>
 						{/if}
 					{/snippet}
@@ -100,12 +110,16 @@
 		</div>
 	{:else}
 		<p class="text-base-content/60 text-sm">
-			{productsSearch.trim() ? 'No matching products.' : 'No products yet. Add one with the + button.'}
+			{productsSearch.trim()
+				? 'No matching products.'
+				: 'No products yet. Add one with the + button.'}
 		</p>
 	{/each}
 
 	{#if filteredDisabled.length > 0}
-		<p class="mt-2 text-xs font-semibold tracking-widest text-base-content/40 uppercase">Disabled</p>
+		<p class="mt-2 text-xs font-semibold tracking-widest text-base-content/40 uppercase">
+			Disabled
+		</p>
 		{#each filteredDisabled as product (product.id)}
 			<div class="flex rounded-xl border border-base-content/10">
 				<div class="flex flex-1 flex-col justify-center gap-1 px-4 py-3">
@@ -125,7 +139,9 @@
 							</li>
 							{#if !product.inUse}
 								<li>
-									<button class="text-error" onclick={() => openDeleteProduct(product)}>Delete</button>
+									<button class="text-error" onclick={() => openDeleteProduct(product)}
+										>Delete</button
+									>
 								</li>
 							{/if}
 						{/snippet}
@@ -134,23 +150,6 @@
 			</div>
 		{/each}
 	{/if}
-</div>
-
-<div class="fab">
-	<div tabindex="0" role="button" class="btn btn-circle btn-xl btn-accent">
-		<PlusIcon weight="bold"></PlusIcon>
-	</div>
-
-	<div class="fab-close">
-		<span class="btn btn-circle btn-xl btn-error">✕</span>
-	</div>
-
-	<button class="btn btn-circle btn-xl" onclick={() => addDialog?.showModal()}>
-		<PencilSimpleIcon weight="bold"></PencilSimpleIcon>
-	</button>
-	<button class="btn btn-circle btn-xl" onclick={() => fileDialog?.showModal()}>
-		<FileIcon weight="bold"></FileIcon>
-	</button>
 </div>
 
 <dialog bind:this={addDialog} class="modal">
@@ -173,7 +172,9 @@
 			{/if}
 
 			<div class="modal-action">
-				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}>Cancel</button>
+				<button type="button" class="btn btn-ghost" onclick={() => addDialog?.close()}
+					>Cancel</button
+				>
 				<button type="submit" class="btn btn-primary">Add</button>
 			</div>
 		</form>
@@ -217,7 +218,9 @@
 				{/if}
 
 				<div class="modal-action">
-					<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}>Cancel</button>
+					<button type="button" class="btn btn-ghost" onclick={() => closeFileDialog()}
+						>Cancel</button
+					>
 					<button type="submit" class="btn btn-primary">Upload</button>
 				</div>
 			</form>
