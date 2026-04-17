@@ -70,7 +70,15 @@
 	);
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]} />
+<Breadcrumbs crumbs={[{ label: 'Counts', href: resolve('/') }, { label: data.count.name }]}>
+	{#snippet actions()}
+		{#if !completed}
+			<FAB href={resolve(`/count/${data.count.id}/record`)}>
+				<MicrophoneIcon weight="bold" />
+			</FAB>
+		{/if}
+	{/snippet}
+</Breadcrumbs>
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<CountCard name={data.count.name} {completed} date={data.count.date}>
@@ -161,12 +169,6 @@
 		{/each}
 	{/if}
 </div>
-
-{#if !completed}
-	<FAB href={resolve(`/count/${data.count.id}/record`)}>
-		<MicrophoneIcon weight="bold" />
-	</FAB>
-{/if}
 
 <EditCountModal bind:dialog={editCountDialog} bind:name={editCountName} action="?/editCount" />
 

@@ -31,7 +31,13 @@
 	}
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Counts' }]} />
+<Breadcrumbs crumbs={[{ label: 'Counts' }]}>
+	{#snippet actions()}
+		<FAB onclick={() => createDialog?.showModal()}>
+			<PlusIcon weight="bold" />
+		</FAB>
+	{/snippet}
+</Breadcrumbs>
 
 <div class="mx-4 my-4 flex h-auto w-auto flex-col gap-4">
 	{#each data.counts as count (count.id)}
@@ -56,10 +62,6 @@
 		<p class="text-base-content/60 text-sm">No counts yet. Start one with the + button.</p>
 	{/each}
 </div>
-
-<FAB bottom="24" onclick={() => createDialog?.showModal()}>
-	<PlusIcon weight="bold" />
-</FAB>
 
 <dialog bind:this={createDialog} class="modal">
 	<div class="modal-box">

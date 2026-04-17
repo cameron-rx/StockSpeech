@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { PlusIcon, FileIcon, PencilSimpleIcon } from 'phosphor-svelte';
+	import { PlusIcon, FileIcon } from 'phosphor-svelte';
+	import FAB from '$lib/components/FAB.svelte';
 	import { enhance } from '$app/forms';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 	import ActionDropdown from '$lib/components/ActionDropdown.svelte';
@@ -59,7 +60,16 @@
 	}
 </script>
 
-<Breadcrumbs crumbs={[{ label: 'Products' }]} />
+<Breadcrumbs crumbs={[{ label: 'Products' }]}>
+	{#snippet actions()}
+		<button class="btn btn-circle btn-md btn-accent" onclick={() => fileDialog?.showModal()}>
+			<FileIcon weight="bold" />
+		</button>
+		<FAB onclick={() => addDialog?.showModal()}>
+			<PlusIcon weight="bold" />
+		</FAB>
+	{/snippet}
+</Breadcrumbs>
 
 <div class="mx-4 my-4 flex flex-col gap-4">
 	<input
@@ -140,23 +150,6 @@
 			</div>
 		{/each}
 	{/if}
-</div>
-
-<div class="fab">
-	<div tabindex="0" role="button" class="btn btn-circle btn-xl btn-accent">
-		<PlusIcon weight="bold"></PlusIcon>
-	</div>
-
-	<div class="fab-close">
-		<span class="btn btn-circle btn-xl btn-error">✕</span>
-	</div>
-
-	<button class="btn btn-circle btn-xl" onclick={() => addDialog?.showModal()}>
-		<PencilSimpleIcon weight="bold"></PencilSimpleIcon>
-	</button>
-	<button class="btn btn-circle btn-xl" onclick={() => fileDialog?.showModal()}>
-		<FileIcon weight="bold"></FileIcon>
-	</button>
 </div>
 
 <dialog bind:this={addDialog} class="modal">
