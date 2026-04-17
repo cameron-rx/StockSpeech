@@ -142,43 +142,52 @@
 	};
 </script>
 
-<div class="flex justify-end px-4 pt-4">
-	<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-ghost">
-		<XIcon size={20} weight="bold" />
-	</a>
-</div>
+<div class="flex h-full flex-col">
+	<!-- Fixed header: close + transcription -->
+	<div class="shrink-0 px-4 pt-4 pb-2">
+		<div class="flex justify-end">
+			<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-ghost">
+				<XIcon size={20} weight="bold" />
+			</a>
+		</div>
 
-<div class="mx-4 my-4 flex flex-col gap-4 pb-32">
-	<div class="relative rounded-xl px-4 py-3">
-		<div
-			class="absolute inset-0 rounded-xl border-2 transition-colors {isRecording
-				? 'animate-pulse border-accent'
-				: 'border-accent/40'}"
-		></div>
-		{#if isFinalFlash}
-			<div class="absolute inset-0 animate-ping rounded-xl bg-success/30"></div>
-		{/if}
-		<p class="relative text-center text-lg text-base-content/60">
-			{transcription}
-		</p>
+		<div class="relative mt-2 rounded-xl px-4 py-3">
+			<div
+				class="absolute inset-0 rounded-xl border-2 transition-colors {isRecording
+					? 'animate-pulse border-accent'
+					: 'border-accent/40'}"
+			></div>
+			{#if isFinalFlash}
+				<div class="absolute inset-0 animate-ping rounded-xl bg-success/30"></div>
+			{/if}
+			<p class="relative text-center text-lg text-base-content/60">
+				{transcription}
+			</p>
+		</div>
 	</div>
 
-	<div class="flex flex-col gap-2">
-		{#each savedItems as item (item.id)}
-			<CountItemRow name={item.itemName} quantity={item.count} confidence={item.confidence}>
-				{#snippet actions()}
-					<ActionDropdown>
-						{#snippet items()}
-							<li><button onclick={() => openEditItem(item)}>Edit</button></li>
-							<li>
-								<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
-							</li>
-						{/snippet}
-					</ActionDropdown>
-				{/snippet}
-			</CountItemRow>
-		{/each}
+	<!-- Scrollable items feed -->
+	<div class="flex-1 overflow-y-auto overscroll-y-contain px-4 py-4">
+		<div class="flex flex-col gap-2">
+			{#each savedItems as item (item.id)}
+				<CountItemRow name={item.itemName} quantity={item.count} confidence={item.confidence}>
+					{#snippet actions()}
+						<ActionDropdown>
+							{#snippet items()}
+								<li><button onclick={() => openEditItem(item)}>Edit</button></li>
+								<li>
+									<button class="text-error" onclick={() => openDeleteItem(item)}>Delete</button>
+								</li>
+							{/snippet}
+						</ActionDropdown>
+					{/snippet}
+				</CountItemRow>
+			{/each}
+		</div>
 	</div>
+
+	<!-- Fixed bottom spacer for the recording controls -->
+	<div class="h-28 shrink-0"></div>
 </div>
 
 <div
