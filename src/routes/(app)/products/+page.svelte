@@ -186,7 +186,11 @@
 
 <dialog bind:this={fileDialog} class="modal">
 	<div class="modal-box">
-		<h3 class="mb-4 text-lg font-bold">Upload Product List</h3>
+		<h3 class="mb-4 text-lg font-bold">Upload Products</h3>
+		<p class="mb-4 text-sm text-base-content/60">
+			Upload a photo or PDF of your product list — this could be a menu, a spreadsheet, a stock
+			sheet, or anything with your product names on it. We'll read it and add the products for you.
+		</p>
 
 		{#if fileIsUploaded}
 			<span>Your file has successfully uploaded</span>
