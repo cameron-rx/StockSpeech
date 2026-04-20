@@ -3,11 +3,15 @@ import { getString, getRequiredString, getNumber } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+	const { user } = await locals.safeGetSession();
+	if (!user) redirect(303, '/login');
+
 	const [{ data: count }, { data: items }, { data: products }] = await Promise.all([
 		locals.supabase
 			.from('stock_counts')
 			.select('id, name, completed, started_at')
 			.eq('id', params.id)
+			.eq('user_id', user.id)
 			.single(),
 		locals.supabase
 			.from('count_items')
@@ -27,7 +31,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
 	delete: async ({ locals, params }) => {
-		const { error } = await locals.supabase.from('stock_counts').delete().eq('id', params.id);
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const { error } = await locals.supabase.from('stock_counts').delete().eq('id', params.id).eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 
@@ -35,10 +42,14 @@ export const actions: Actions = {
 	},
 
 	complete: async ({ locals, params }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const { error } = await locals.supabase
 			.from('stock_counts')
 			.update({ completed: 'completed', completed_at: new Date().toISOString() })
-			.eq('id', params.id);
+			.eq('id', params.id)
+			.eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	},
@@ -54,6 +65,9 @@ export const actions: Actions = {
 	},
 
 	editCount: async ({ locals, params, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const formData = await request.formData();
 		const name = getRequiredString(formData, 'name');
 
@@ -62,7 +76,8 @@ export const actions: Actions = {
 		const { error } = await locals.supabase
 			.from('stock_counts')
 			.update({ name })
-			.eq('id', params.id);
+			.eq('id', params.id)
+			.eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	},

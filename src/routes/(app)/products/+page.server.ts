@@ -64,6 +64,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'No file uploaded' });
 		}
 
+		// 10MB limit
+		if (file.size > 10 * 1024 * 1024) {
+			return fail(400, { error: 'File too large. Maximum size is 10MB.' });
+		}
+
+		const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+		if (!allowedTypes.includes(file.type)) {
+			return fail(400, { error: 'Invalid file type. Please upload a PDF or image.' });
+		}
+
 		const arrayBuffer = await file.arrayBuffer();
 		const uint8Array = new Uint8Array(arrayBuffer);
 		let binary = '';
@@ -114,6 +124,9 @@ export const actions: Actions = {
 	},
 
 	deleteProduct: async ({ locals, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const formData = await request.formData();
 		const productId = getString(formData, 'productId');
 		if (!productId) return fail(400, { error: 'Product ID is required' });
@@ -127,12 +140,15 @@ export const actions: Actions = {
 		if (refs && refs.length > 0)
 			return fail(400, { error: 'Product is in use and cannot be deleted.' });
 
-		const { error } = await locals.supabase.from('products').delete().eq('id', productId);
+		const { error } = await locals.supabase.from('products').delete().eq('id', productId).eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	},
 
 	disableProduct: async ({ locals, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const formData = await request.formData();
 		const productId = getString(formData, 'productId');
 		if (!productId) return fail(400, { error: 'Product ID is required' });
@@ -140,12 +156,16 @@ export const actions: Actions = {
 		const { error } = await locals.supabase
 			.from('products')
 			.update({ active: false })
-			.eq('id', productId);
+			.eq('id', productId)
+			.eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	},
 
 	enableProduct: async ({ locals, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const formData = await request.formData();
 		const productId = getString(formData, 'productId');
 		if (!productId) return fail(400, { error: 'Product ID is required' });
@@ -153,12 +173,16 @@ export const actions: Actions = {
 		const { error } = await locals.supabase
 			.from('products')
 			.update({ active: true })
-			.eq('id', productId);
+			.eq('id', productId)
+			.eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	},
 
 	editProduct: async ({ locals, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
 		const formData = await request.formData();
 		const productId = getString(formData, 'productId');
 		const name = getRequiredString(formData, 'name');
@@ -170,7 +194,8 @@ export const actions: Actions = {
 		const { error } = await locals.supabase
 			.from('products')
 			.update({ name, unit })
-			.eq('id', productId);
+			.eq('id', productId)
+			.eq('user_id', user.id);
 
 		if (error) return fail(500, { error: error.message });
 	}
