@@ -3,10 +3,14 @@ import { getString, getNumber } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+	const { user } = await locals.safeGetSession();
+	if (!user) redirect(303, '/login');
+
 	const { data: count } = await locals.supabase
 		.from('stock_counts')
 		.select('id, name, completed')
 		.eq('id', params.id)
+		.eq('user_id', user.id)
 		.single();
 
 	if (!count || count.completed !== 'in_progress') redirect(303, `/count/${params.id}`);
@@ -14,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: productRows } = await locals.supabase
 		.from('products')
 		.select('id, name')
+		.eq('user_id', user.id)
 		.eq('active', true)
 		.order('display_order');
 
