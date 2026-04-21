@@ -4,13 +4,19 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { user } = await locals.safeGetSession();
-	if (!user) return { counts: [] };
+	if (!user) return { counts: [], hasProducts: false };
 
-	const { data: countRows } = await locals.supabase
-		.from('stock_counts')
-		.select('id, name, completed, started_at')
-		.eq('user_id', user.id)
-		.order('started_at', { ascending: false });
+	const [{ data: countRows }, { count: productCount }] = await Promise.all([
+		locals.supabase
+			.from('stock_counts')
+			.select('id, name, completed, started_at')
+			.eq('user_id', user.id)
+			.order('started_at', { ascending: false }),
+		locals.supabase
+			.from('products')
+			.select('id', { count: 'exact', head: true })
+			.eq('user_id', user.id)
+	]);
 
 	const counts =
 		countRows?.map((row) => ({
@@ -20,7 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			date: new Date(row.started_at)
 		})) ?? [];
 
-	return { counts };
+	return { counts, hasProducts: (productCount ?? 0) > 0 };
 };
 
 export const actions: Actions = {
