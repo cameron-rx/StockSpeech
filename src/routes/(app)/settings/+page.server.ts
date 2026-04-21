@@ -38,6 +38,33 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	updatePassword: async ({ locals, request }) => {
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { passwordError: 'Not authenticated' });
+
+		const formData = await request.formData();
+		const password = formData.get('password') as string;
+		const confirmPassword = formData.get('confirm-password') as string;
+
+		if (!password || !confirmPassword) {
+			return fail(400, { passwordError: 'Both fields are required' });
+		}
+
+		if (password.length < 6) {
+			return fail(400, { passwordError: 'Password must be at least 6 characters' });
+		}
+
+		if (password !== confirmPassword) {
+			return fail(400, { passwordError: 'Passwords do not match' });
+		}
+
+		const { error } = await locals.supabase.auth.updateUser({ password });
+
+		if (error) return fail(500, { passwordError: error.message });
+
+		return { passwordSuccess: true };
+	},
+
 	logout: async ({ locals }) => {
 		await locals.supabase.auth.signOut();
 		redirect(303, '/login');

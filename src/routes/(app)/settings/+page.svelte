@@ -52,6 +52,54 @@
 	</div>
 
 	<div class="flex flex-col gap-3">
+		<h2 class="text-xs font-semibold tracking-widest text-base-content/40 uppercase">Password</h2>
+		<div class="rounded-xl border border-base-content/10">
+			<form
+				method="POST"
+				action="?/updatePassword"
+				use:enhance={() =>
+					async ({ update }) => {
+						await update();
+					}}
+				class="flex flex-col gap-4 p-4"
+			>
+				<label class="floating-label">
+					<input
+						class="input w-full"
+						type="password"
+						name="password"
+						placeholder="New password"
+						minlength={6}
+						required
+					/>
+					<span>New password</span>
+				</label>
+
+				<label class="floating-label">
+					<input
+						class="input w-full"
+						type="password"
+						name="confirm-password"
+						placeholder="Confirm password"
+						minlength={6}
+						required
+					/>
+					<span>Confirm password</span>
+				</label>
+
+				{#if form?.passwordError}
+					<p class="text-sm text-error">{form.passwordError}</p>
+				{/if}
+				{#if form?.passwordSuccess}
+					<p class="text-sm text-success">Password updated.</p>
+				{/if}
+
+				<button type="submit" class="btn self-end btn-sm btn-primary">Update password</button>
+			</form>
+		</div>
+	</div>
+
+	<div class="flex flex-col gap-3">
 		<h2 class="text-xs font-semibold tracking-widest text-base-content/40 uppercase">Account</h2>
 		<div class="rounded-xl border border-base-content/10 p-4">
 			<div class="flex items-center justify-between">
