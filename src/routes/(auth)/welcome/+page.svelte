@@ -16,7 +16,7 @@
 					id="fullName"
 					type="text"
 					name="fullName"
-					placeholder="John Doe"
+					placeholder="John Smith"
 					required
 				/>
 			</div>
