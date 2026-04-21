@@ -109,11 +109,16 @@
 			</div>
 		</div>
 	{:else}
-		<p class="text-base-content/60 text-sm">
-			{productsSearch.trim()
-				? 'No matching products.'
-				: 'No products yet. Add one with the + button.'}
-		</p>
+		{#if productsSearch.trim()}
+			<p class="text-base-content/60 text-sm">No matching products.</p>
+		{:else}
+			<div class="flex flex-col items-center gap-3 rounded-xl border border-dashed border-base-content/20 px-6 py-10 text-center">
+				<p class="text-base font-semibold">No products yet</p>
+				<p class="text-sm text-base-content/60">
+					Tap the <span class="inline-flex align-middle"><PlusIcon weight="bold" size={16} /></span> button to add products one at a time, or tap <span class="inline-flex align-middle"><FileIcon weight="bold" size={16} /></span> to upload a photo or PDF of your product list and we'll import them for you.
+				</p>
+			</div>
+		{/if}
 	{/each}
 
 	{#if filteredDisabled.length > 0}
