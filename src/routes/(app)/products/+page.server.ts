@@ -35,6 +35,27 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return { products };
 };
 
+async function productNameExists(
+	supabase: App.Locals['supabase'],
+	userId: string,
+	name: string,
+	excludeProductId?: string
+): Promise<boolean> {
+	const query = supabase
+		.from('products')
+		.select('id')
+		.eq('user_id', userId)
+		.ilike('name', name)
+		.limit(1);
+
+	if (excludeProductId) {
+		query.neq('id', excludeProductId);
+	}
+
+	const { data } = await query;
+	return (data ?? []).length > 0;
+}
+
 export const actions: Actions = {
 	addProduct: async ({ locals, request }) => {
 		const { user } = await locals.safeGetSession();
@@ -45,6 +66,10 @@ export const actions: Actions = {
 		const unit = getString(formData, 'unit') || null;
 
 		if (!name) return fail(400, { error: 'Name is required' });
+
+		if (await productNameExists(locals.supabase, user.id, name)) {
+			return fail(400, { error: 'A product with this name already exists.' });
+		}
 
 		const { error } = await locals.supabase
 			.from('products')
@@ -114,9 +139,24 @@ export const actions: Actions = {
 		});
 
 		const res = JSON.parse(response.output_text) as ProductImportResponse;
-		const productsToInsert = res.products.map((p) => {
-			return { name: p.name, unit: p.unit, user_id: user.id };
-		});
+
+		// Filter out products whose names already exist (case-insensitive)
+		const { data: existingProducts } = await locals.supabase
+			.from('products')
+			.select('name')
+			.eq('user_id', user.id);
+
+		const existingNames = new Set(
+			(existingProducts ?? []).map((p) => p.name.toLowerCase())
+		);
+
+		const productsToInsert = res.products
+			.filter((p) => !existingNames.has(p.name.toLowerCase()))
+			.map((p) => ({ name: p.name, unit: p.unit, user_id: user.id }));
+
+		if (productsToInsert.length === 0) {
+			return fail(400, { error: 'All products from the file already exist.' });
+		}
 
 		const { error } = await locals.supabase.from('products').insert(productsToInsert);
 
@@ -190,6 +230,10 @@ export const actions: Actions = {
 
 		if (!productId) return fail(400, { error: 'Product ID is required' });
 		if (!name) return fail(400, { error: 'Name is required' });
+
+		if (await productNameExists(locals.supabase, user.id, name, productId)) {
+			return fail(400, { error: 'A product with this name already exists.' });
+		}
 
 		const { error } = await locals.supabase
 			.from('products')
