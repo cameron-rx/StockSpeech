@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PlusIcon, PackageIcon } from 'phosphor-svelte';
+	import { PlusIcon, BeerBottleIcon } from 'phosphor-svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
@@ -33,7 +33,7 @@
 
 {#if !data.hasProducts}
 	<div class="flex h-full flex-col items-center justify-center gap-6 px-6 text-center">
-		<PackageIcon size={64} weight="duotone" class="text-base-content/30" />
+		<BeerBottleIcon size={64} weight="duotone" class="text-base-content/30" />
 		<h2 class="text-xl font-bold">Add your products first</h2>
 		<p class="max-w-xs text-sm text-base-content/60">
 			You need a product list before you can start counting stock. Add your products and come back
