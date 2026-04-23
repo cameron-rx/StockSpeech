@@ -11,11 +11,11 @@
 </script>
 
 {#if href}
-	<a {href} class="btn btn-circle btn-md btn-accent">
+	<a {href} class="btn btn-circle btn-lg btn-accent">
 		{@render children()}
 	</a>
 {:else}
-	<button class="btn btn-circle btn-md btn-accent" {onclick}>
+	<button class="btn btn-circle btn-lg btn-accent" {onclick}>
 		{@render children()}
 	</button>
 {/if}
