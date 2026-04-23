@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
-import OpenAI from 'openai';
-import { OPEN_AI_API_KEY } from '$env/static/private';
+import { GoogleGenAI } from '@google/genai';
+import { GEMINI_API_KEY } from '$env/static/private';
 import { getEnv } from '$lib/server/env';
 import { getString, getRequiredString } from '$lib/server/form';
 import type { Actions, PageServerLoad } from './$types';
@@ -106,39 +106,41 @@ export const actions: Actions = {
 			binary += String.fromCharCode(uint8Array[i]);
 		}
 		const base64 = btoa(binary);
-		const dataUrl = `data:${file.type};base64,${base64}`;
 
-		const apiKey = getEnv(platform, 'OPEN_AI_API_KEY', OPEN_AI_API_KEY);
-		const client = new OpenAI({ apiKey });
+		const apiKey = getEnv(platform, 'GEMINI_API_KEY', GEMINI_API_KEY);
+		const ai = new GoogleGenAI({ apiKey });
 		const systemPrompt = `You are a stock management assistant. Extract a product list from the provided file.
 		Return ONLY valid JSON in this exact format, no markdown, no explanation:
 		{"products":[{"name":"string","unit":"string or null"}]}
-		- unit should be the unit of measure if present (e.g. bottle, kg, case), otherwise null
+		- unit should be the unit of measure if present for a single countable unit (e.g. 330ml, keg, litre, 70cl), otherwise null
 		- include every distinct product you can identify
 		- normalise product names to title case`;
 
-		const response = await client.responses.create({
-			model: 'gpt-5-nano',
-			input: [
+		const response = await ai.models.generateContent({
+			model: 'gemini-2.5-flash',
+			config: {
+				responseMimeType: 'application/json',
+				systemInstruction: systemPrompt
+			},
+			contents: [
 				{
 					role: 'user',
-					content: [
+					parts: [
 						{
-							type: 'input_file',
-							filename: file.name,
-							file_data: dataUrl
+							inlineData: {
+								mimeType: file.type,
+								data: base64
+							}
 						},
 						{
-							type: 'input_text',
 							text: 'Extract products from this file'
 						}
 					]
 				}
-			],
-			instructions: systemPrompt
+			]
 		});
 
-		const res = JSON.parse(response.output_text) as ProductImportResponse;
+		const res = JSON.parse(response.text ?? '{"products":[]}') as ProductImportResponse;
 
 		// Filter out products whose names already exist (case-insensitive)
 		const { data: existingProducts } = await locals.supabase
