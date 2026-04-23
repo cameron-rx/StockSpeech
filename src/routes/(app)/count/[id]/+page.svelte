@@ -74,7 +74,7 @@
 	{#snippet actions()}
 		{#if !completed}
 			<FAB href={resolve(`/count/${data.count.id}/record`)}>
-				<MicrophoneIcon weight="bold" />
+				<MicrophoneIcon weight="bold" size={24} />
 			</FAB>
 		{/if}
 	{/snippet}

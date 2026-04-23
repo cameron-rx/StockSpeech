@@ -46,7 +46,7 @@
 <Breadcrumbs crumbs={[{ label: 'Counts' }]}>
 	{#snippet actions()}
 		<FAB onclick={() => createDialog?.showModal()}>
-			<PlusIcon weight="bold" />
+			<PlusIcon weight="bold" size={24} />
 		</FAB>
 	{/snippet}
 </Breadcrumbs>

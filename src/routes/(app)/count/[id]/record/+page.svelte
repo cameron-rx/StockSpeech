@@ -146,7 +146,7 @@
 	<!-- Fixed header: close + transcription -->
 	<div class="shrink-0 px-4 pt-4 pb-2">
 		<div class="flex justify-end">
-			<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-ghost">
+			<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-lg btn-ghost">
 				<XIcon size={20} weight="bold" />
 			</a>
 		</div>
@@ -194,7 +194,7 @@
 	class="fixed right-0 bottom-0 left-0 flex justify-center pb-[calc(1rem+env(safe-area-inset-bottom))]"
 >
 	<div
-		class="flex flex-row items-center gap-8 rounded-full bg-primary px-6 py-3 text-primary-content shadow-lg"
+		class="flex flex-row items-center gap-8 rounded-full bg-base-200 border border-base-300 px-6 py-3 text-base-content shadow-lg"
 	>
 		<form
 			method="POST"
@@ -211,7 +211,7 @@
 				type="submit"
 				class="btn btn-circle btn-ghost btn-xl"
 				style={savedItems.length === 0
-					? '--btn-fg: color-mix(in oklch, var(--color-primary-content) 40%, transparent)'
+					? '--btn-fg: color-mix(in oklch, var(--color-base-content) 40%, transparent)'
 					: ''}
 				disabled={savedItems.length === 0}
 				aria-label="Undo last item"

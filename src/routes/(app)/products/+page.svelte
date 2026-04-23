@@ -62,11 +62,11 @@
 
 <Breadcrumbs crumbs={[{ label: 'Products' }]}>
 	{#snippet actions()}
-		<button class="btn btn-circle btn-md btn-accent" onclick={() => fileDialog?.showModal()}>
-			<FileIcon weight="bold" />
+		<button class="btn btn-circle btn-lg btn-accent" onclick={() => fileDialog?.showModal()}>
+			<FileIcon weight="bold" size={24} />
 		</button>
 		<FAB onclick={() => addDialog?.showModal()}>
-			<PlusIcon weight="bold" />
+			<PlusIcon weight="bold" size={24} />
 		</FAB>
 	{/snippet}
 </Breadcrumbs>
