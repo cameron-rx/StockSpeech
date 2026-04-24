@@ -147,7 +147,7 @@
 	<div class="shrink-0 px-4 pt-4 pb-2">
 		<div class="flex justify-end">
 			<a href={resolve(`/count/${data.count.id}`)} class="btn btn-circle btn-lg btn-ghost">
-				<XIcon size={20} weight="bold" />
+				<XIcon size={24} weight="bold" />
 			</a>
 		</div>
 
