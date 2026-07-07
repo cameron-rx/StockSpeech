@@ -6,7 +6,7 @@ During my time working as a Team Leader in a cocktail bar I had to perform routi
 
 ## Features
 ✅  Live voice transcription  
-✅  Realtime parsing for stock items and counts
+✅  Realtime parsing for stock items and counts  
 ✅  PWA install for mobile devices
 
 ## Technologies Used
