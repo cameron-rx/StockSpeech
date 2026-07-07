@@ -1,42 +1,18 @@
-# sv
+# ⚒️ StockSpeech
+[Live Demo](app.stockspeech.com)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+## Description
+During my time working as a Team Leader in a cocktail bar I had to perform routine stock counts with pen and paper that would take a very long time to perform. I created this voice based web app to help speed up the process.
 
-## Creating a project
+## Features
+✅  Live voice transcription  
+✅  Realtime parsing for stock items and counts
+✅  PWA install for mobile devices
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Technologies Used
+- Sveltekit
+- Deepgram
+- Groq
+- Supabase
+- Cloudflare
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.12.6 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:forms" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" --install npm stockspeech-mvp
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
